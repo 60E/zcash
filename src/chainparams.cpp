@@ -16,6 +16,7 @@
 using namespace std;
 
 #include "chainparamsseeds.h"
+#include "timedata.h"
 
 /**
  * Main network
@@ -49,7 +50,7 @@ public:
         consensus.nPowMaxAdjustUp = 16; // 16% adjustment up
         consensus.nPowTargetSpacing = 2.5 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
-        /** 
+        /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
@@ -297,4 +298,71 @@ bool SelectParamsFromCommandLine()
 
     SelectParams(network);
     return true;
+}
+
+bool genGenesisBlockSHA256(bool fTestNet) {
+        printf("genGenesisBlock\n");
+        const char* pszTimestamp = "B1C4E1EA1B3C05944851D026DC5985EC7EB807547334E5E944AA3D4E8191D486";
+        CMutableTransaction txNew;
+        txNew.vin.resize(1);
+        txNew.vout.resize(1);
+        txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+        txNew.vout[0].nValue = 50 * COIN;
+        if (fTestNet)
+        {
+//                CPubKey pubkey();
+                txNew.vout[0].scriptPubKey = CScript() << ParseHex("02d704a4ffd9750b329f3ff92e85df5e5db30bf0f16505d74f533594d9e5e312d6") << OP_CHECKSIG;
+        }
+        else
+        {
+//                CPubKey pubkey();
+                txNew.vout[0].scriptPubKey = CScript() << ParseHex("030965d67867dfe21f9303ed2369971cc1e0cee55bcf997700fdc2783d1d7f5bb6") << OP_CHECKSIG;
+        }
+
+        CBlock block;
+        block.vtx.push_back(txNew);
+        block.hashPrevBlock.SetNull();
+        block.hashMerkleRoot = block.BuildMerkleTree();
+        block.nVersion = 2;
+        block.nTime    = GetTime();
+        arith_uint256 nbitsValue = arith_uint256(-1) >> 32;
+        block.nBits    = nbitsValue.GetCompact();
+//        block.nNonce   = 0;
+        block.nNonce   = uint256S("0x0000000000000000000000000000000000000000000000000000000000000000");
+
+        printf("header %s\n", HexStr(BEGIN(block), BEGIN(block) + 80).c_str());
+        printf("%d\n", block.nTime);
+        printf("0x%02X\n", block.nBits);
+        printf("%s\n", block.hashMerkleRoot.ToString().c_str());
+
+//        uint256 hashTarget = ArithToUint256(arith_uint256().SetCompact(block.nBits));
+        arith_uint256 hashTarget = arith_uint256().SetCompact(block.nBits);
+        while (1)
+        {
+                block.nNonce = ArithToUint256(UintToArith256(block.nNonce) + 1);
+                arith_uint256 hash = UintToArith256(block.GetHash());
+                if (hash <= hashTarget)
+                {
+                        // Found a solution
+                        break;
+                }
+
+                if (block.nNonce == ArithToUint256(arith_uint256(0xFFFFFFFF)))
+                {
+                        block.nNonce = ArithToUint256(arith_uint256(0));
+                        block.nTime    = GetTime();
+                }
+        }
+
+        uint256 hash1 = block.GetHash();
+
+        printf("block.nTime %d\n", block.nTime);
+        printf("block.nBits 0x%02X\n", block.nBits);
+        printf("block.nNonce %s\n", block.nNonce.ToString().c_str());
+        printf("block.hash %s\n", hash1.ToString().c_str());
+//        printf("%s\n", hashGenesisBlock.ToString().c_str());
+        printf("%s\n", block.hashMerkleRoot.ToString().c_str());
+//        block.print();
+
+        return false;
 }
