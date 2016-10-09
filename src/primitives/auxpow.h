@@ -147,9 +147,9 @@ public:
 //    }
 //}
 
-extern void RemoveMergedMiningHeader(std::vector<unsigned char>& vchAux);
-extern CScript MakeCoinbaseWithAux(unsigned int nBits, unsigned int nExtraNonce, std::vector<unsigned char>& vchAux);
-//extern void IncrementExtraNonceWithAux(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, int64& nPrevTime, std::vector<unsigned char>& vchAux);
+//extern void RemoveMergedMiningHeader(std::vector<unsigned char>& vchAux);
+//extern CScript MakeCoinbaseWithAux(unsigned int nBits, unsigned int nExtraNonce, std::vector<unsigned char>& vchAux);
+extern void IncrementExtraNonceWithAux(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, uint64_t& nPrevTime, std::vector<unsigned char>& vchAux);
 #endif
 
 

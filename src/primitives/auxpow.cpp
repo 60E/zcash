@@ -9,6 +9,7 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <timedata.h>
 #include "script/script.h"
 #include "auxpow.h"
 
@@ -135,19 +136,22 @@ CScript MakeCoinbaseWithAux(unsigned int nBits, unsigned int nExtraNonce, vector
     return CScript() << nBits << nExtraNonce << OP_2 << vchAuxWithHeader;
 }
 
-//
-//void IncrementExtraNonceWithAux(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, int64& nPrevTime, vector<unsigned char>& vchAux)
-//{
-//    // Update nExtraNonce
-//    int64 nNow = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
-//    if (++nExtraNonce >= 0x7f && nNow > nPrevTime+1)
-//    {
-//        nExtraNonce = 1;
-//        nPrevTime = nNow;
-//    }
-//
+
+void IncrementExtraNonceWithAux(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, uint64_t& nPrevTime, vector<unsigned char>& vchAux)
+{
+    // Update nExtraNonce
+    uint64_t nNow = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    if (++nExtraNonce >= 0x7f && nNow > nPrevTime+1)
+    {
+        nExtraNonce = 1;
+        nPrevTime = nNow;
+    }
+
+    CMutableTransaction cmTran = CMutableTransaction(pblock->vtx[0]);
+    cmTran.vin[0].scriptSig = MakeCoinbaseWithAux(pblock->nBits, nExtraNonce, vchAux);
+    pblock->vtx[0] = CTransaction(cmTran);
 //    pblock->vtx[0].vin[0].scriptSig = MakeCoinbaseWithAux(pblock->nBits, nExtraNonce, vchAux);
-//    pblock->hashMerkleRoot = pblock->BuildMerkleTree();
-//}
+    pblock->hashMerkleRoot = pblock->BuildMerkleTree();
+}
 
 
