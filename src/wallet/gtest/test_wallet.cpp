@@ -11,7 +11,7 @@
 #include "zcash/Note.hpp"
 #include "zcash/NoteEncryption.hpp"
 
-using ::testing::_;
+//using ::testing::_;
 using ::testing::Return;
 
 ZCJoinSplit* params = ZCJoinSplit::Unopened();

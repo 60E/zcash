@@ -9,6 +9,8 @@
 #include "primitives/transaction.h"
 #include "serialize.h"
 #include "uint256.h"
+#include "primitives/auxpow.h"
+#include <boost/shared_ptr.hpp>
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
@@ -23,6 +25,7 @@ public:
     // header
     static const size_t HEADER_SIZE=4+32+32+32+4+4+32; // excluding Equihash solution
     static const int32_t CURRENT_VERSION=4;
+    static const int32_t CHAIN_START = (1 << 16);
     int32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -31,6 +34,8 @@ public:
     uint32_t nBits;
     uint256 nNonce;
     std::vector<unsigned char> nSolution;
+    uint32_t nChainId;
+    boost::shared_ptr<CAuxPow> auxpow;
 
     CBlockHeader()
     {
@@ -50,6 +55,16 @@ public:
         READWRITE(nBits);
         READWRITE(nNonce);
         READWRITE(nSolution);
+
+        READWRITE(nChainId);
+        if (this->IsAuxpow()){
+            if (ser_action.ForRead())
+                auxpow.reset(new CAuxPow());
+
+            assert(auxpow);
+            READWRITE(*auxpow);
+        } else if (ser_action.ForRead())
+            auxpow.reset();
     }
 
     void SetNull()
@@ -62,6 +77,9 @@ public:
         nBits = 0;
         nNonce = uint256();
         nSolution.clear();
+
+        nChainId = 0;
+        auxpow.reset();
     }
 
     bool IsNull() const
@@ -75,6 +93,12 @@ public:
     {
         return (int64_t)nTime;
     }
+
+    bool IsAuxpow() const;
+    void SetAuxpow(CAuxPow *apow);
+    void SetAuxpowFlag(bool isAuxpow);
+    uint16_t  GetChainId() const;
+    void SetChainId(uint16_t chainId);
 };
 
 
@@ -124,6 +148,8 @@ public:
         block.nBits          = nBits;
         block.nNonce         = nNonce;
         block.nSolution      = nSolution;
+        block.nChainId = nChainId;
+        block.auxpow = auxpow;
         return block;
     }
 

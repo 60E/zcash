@@ -12,6 +12,8 @@
 #include <timedata.h>
 #include "script/script.h"
 #include "auxpow.h"
+#include "primitives/block.h"
+#include "chain.h"
 
 using namespace std;
 using namespace boost;
@@ -137,10 +139,10 @@ CScript MakeCoinbaseWithAux(unsigned int nBits, unsigned int nExtraNonce, vector
 }
 
 
-void IncrementExtraNonceWithAux(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, uint64_t& nPrevTime, vector<unsigned char>& vchAux)
+void IncrementExtraNonceWithAux(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce, uint64_t& nPrevTime, vector<unsigned char>& vchAux, int64_t time)
 {
     // Update nExtraNonce
-    uint64_t nNow = max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    uint64_t nNow = max(pindexPrev->GetMedianTimePast()+1, time);
     if (++nExtraNonce >= 0x7f && nNow > nPrevTime+1)
     {
         nExtraNonce = 1;

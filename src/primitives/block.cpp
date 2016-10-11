@@ -12,7 +12,49 @@
 
 uint256 CBlockHeader::GetHash() const
 {
-    return SerializeHash(*this);
+    return Hash(BEGIN(nVersion), END(nNonce));
+//    return SerializeHash(*this);
+}
+
+bool CBlockHeader::IsAuxpow() const
+{
+    return GetChainId() != 0;
+}
+
+void CBlockHeader::SetAuxpow(CAuxPow *apow)
+{
+    if (apow)
+    {
+        auxpow.reset(apow);
+        SetAuxpowFlag(true);
+    }
+    else
+    {
+        auxpow.reset();
+        SetAuxpowFlag(false);
+    }
+}
+
+void CBlockHeader::SetAuxpowFlag(bool isAuxpow)
+{
+    if (IsAuxpow() != isAuxpow)
+    {
+        SetChainId((uint16_t)(isAuxpow ? 26 : 0));
+    }
+}
+
+uint16_t  CBlockHeader::GetChainId() const
+{
+    return (uint16_t)(nChainId % CHAIN_START);
+}
+
+void CBlockHeader::SetChainId(uint16_t chainId)
+{
+    if (chainId > 0)
+    {
+        nChainId &= 0xffff0000;
+        nChainId |= chainId;
+    }
 }
 
 uint256 CBlock::BuildMerkleTree(bool* fMutated) const
