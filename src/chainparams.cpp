@@ -62,7 +62,7 @@ public:
         pchMessageStart[2] = 0x4e;
         pchMessageStart[3] = 0xd8;
         vAlertPubKey = ParseHex("04b7ecf0baa90495ceb4e4090f6b2fd37eec1e9c85fac68a487f3ce11589692e4a317479316ee814e066638e1db54e37a10689b70286e6315b1087b6615d179264");
-        nDefaultPort = 8233;
+        nDefaultPort = 8234;
         nMinerThreads = 0;
         nMaxTipAge = 24 * 60 * 60;
         nPruneAfterHeight = 100000;
@@ -184,7 +184,7 @@ public:
         pchMessageStart[2] = 0xD7;
         pchMessageStart[3] = 0xA2;
         vAlertPubKey = ParseHex("044e7a1553392325c871c5ace5d6ad73501c66f4c185d6b0453cf45dec5a1322e705c672ac1a27ef7cdaf588c10effdf50ed5f95f85f2f54a5f6159fca394ed0c6");
-        nDefaultPort = 18233;
+        nDefaultPort = 18234;
         nMinerThreads = 0;
         nMaxTipAge = 0x7fffffff;
         nPruneAfterHeight = 1000;
@@ -284,7 +284,7 @@ public:
         genesis.nNonce = uint256S("0x0000000000000000000000000000000000000000000000000000000000000021");
         genesis.nSolution = ParseHex("0f2a976db4c4263da10fd5d38eb1790469cf19bdb4bf93450e09a72fdff17a3454326399");
         consensus.hashGenesisBlock = genesis.GetHash();
-        nDefaultPort = 18444;
+        nDefaultPort = 18445;
         assert(consensus.hashGenesisBlock == uint256S("0x00a215b4fe36f5d2f829d43e587bf10e89e64f9f48a5b6ce18559089e8fd643d"));
         nPruneAfterHeight = 1000;
 
