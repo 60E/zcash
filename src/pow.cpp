@@ -143,9 +143,9 @@ bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params
 //    if (block.auxpow->getParentBlock().IsAuxpow())
   //      return error("%s : auxpow parent block has auxpow version", __func__);
 
-    if (!block.auxpow->check(block.GetHash(), block.GetChainId()))
+    if (!block.auxpow->Check(block.GetHash(), block.GetChainId()))
         return error("%s : AUX POW is not valid", __func__);
-    if (!CheckProofOfWork(block.auxpow->getParentBlockHash(), block.nBits, params))
+    if (!CheckProofOfWork(block.auxpow->GetParentBlockHash(), block.nBits, params))
         return error("%s : AUX proof of work failed", __func__);
 
     return true;
