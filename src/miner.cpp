@@ -530,7 +530,7 @@ void static BitcoinMiner(CWallet *pwallet)
 					SetThreadPriority(THREAD_PRIORITY_LOWEST);
 					
 					// In regression test mode, stop mining after a block is found.
-					if (chainparams.MineBlocksOnDemand())
+//					if (chainparams.MineBlocksOnDemand())
 						throw boost::thread_interrupted();
 				}
 
@@ -628,7 +628,6 @@ void static BitcoinAuxMiner(CWallet *pwallet)
                 return;
             }
             CBlock *pblockAux = &pblocktemplateAux->block;
-			pblockAux->SetChainId(26);
             IncrementExtraNonce(pblockAux, pindexPrev, nExtraNonce);
 
             LogPrintf("Running ZcashMiner with %u transactions in block (%u bytes)\n", pblockAux->vtx.size(),
@@ -656,12 +655,11 @@ void static BitcoinAuxMiner(CWallet *pwallet)
 			for ( temp = 0; temp < 8; ++ temp )
 				vchCoinbase.push_back(sizeAndChainId[temp]);
 			
-			int64_t nPrevTime = 0;
+			uint64_t nPrevTime = 0;
 			IncrementExtraNonceWithAux(pblockTemp, pindexPrev, nExtraNonce, nPrevTime, vchCoinbase, GetAdjustedTime());
 
-
 			CMerkleTx vMerkleTx(pblockTemp->vtx[0]);
-			vMerkleTx.SetMerkleBranch(pblockTemp);
+			vMerkleTx.SetMerkleBranch(*pblockTemp);
 			CAuxPow* pow = new CAuxPow();
 			pow->mMerkleTx = vMerkleTx;
 			pow->vParentBlockHeader.nVersion = pblockTemp->nVersion;
@@ -669,8 +667,9 @@ void static BitcoinAuxMiner(CWallet *pwallet)
 			pow->vParentBlockHeader.hashMerkleRoot = pblockTemp->hashMerkleRoot;
 			pow->vParentBlockHeader.nTime = pblockTemp->nTime;
 			pow->vParentBlockHeader.nBits = pblockTemp->nBits;
-			pow->vParentBlockHeader.nNonce = pblockTemp->nNonce;
+			pow->vParentBlockHeader.nNonce = 0;
 			pblockAux->SetAuxpow(pow);
+            pblockAux->SetChainId(26);
 
 			CParentBlockHeader *pblockParent = &pow->vParentBlockHeader;
             //
@@ -682,13 +681,11 @@ void static BitcoinAuxMiner(CWallet *pwallet)
 			bool foundResult = false;
             while (!foundResult) {
 
-				arith_uint256 nonceStart = UintToArith256(pblockParent->nNonce);
 				int searchCount = 2048;
 
 				while(!foundResult && searchCount --)
 				{
-					pblockParent->nNonce = ArithToUint256(nonceStart);
-					nonceStart += 1;
+					pblockParent->nNonce += 1;
 					if (UintToArith256(pblockParent->GetHash()) > hashTarget) {
 						continue;
 					}
@@ -696,6 +693,7 @@ void static BitcoinAuxMiner(CWallet *pwallet)
 					// Found a solution
 					SetThreadPriority(THREAD_PRIORITY_NORMAL);
 					LogPrintf("ZcashMiner:\n");
+                    printf("ZcashMiner Found a solution\n");
 					LogPrintf("proof-of-work found	\n	hash: %s  \ntarget: %s\n", pblockParent->GetHash().GetHex(), hashTarget.GetHex());
 					if (ProcessBlockFound(pblockAux, *pwallet, reservekey)) {
 						// Ignore chain updates caused by us
@@ -705,7 +703,7 @@ void static BitcoinAuxMiner(CWallet *pwallet)
 					SetThreadPriority(THREAD_PRIORITY_LOWEST);
 					
 					// In regression test mode, stop mining after a block is found.
-					if (chainparams.MineBlocksOnDemand())
+					//if (chainparams.MineBlocksOnDemand())
 						throw boost::thread_interrupted();
 				}
 
@@ -718,7 +716,7 @@ void static BitcoinAuxMiner(CWallet *pwallet)
                 // Regtest mode doesn't require peers
                 //if (vNodes.empty() && chainparams.MiningRequiresPeers())
                     //break;
-                if ((UintToArith256(pblockParent->nNonce) & 0xffff) == 0xffff)
+                if ((pblockParent->nNonce & 0xffff) == 0xffff)
                     break;
                 if (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast && GetTime() - nStart > 60)
                     break;
@@ -726,8 +724,9 @@ void static BitcoinAuxMiner(CWallet *pwallet)
                     break;
 
                 // Update nNonce and nTime
-                pblockParent->nNonce = ArithToUint256(UintToArith256(pblockParent->nNonce) + 1);
-                UpdateTime(pblockParent, chainparams.GetConsensus(), pindexPrev);
+                pblockParent->nNonce += 1;
+                //UpdateTime(pblockParent, chainparams.GetConsensus(), pindexPrev);
+                pblockParent->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
                 if (chainparams.GetConsensus().fPowAllowMinDifficultyBlocks)
                 {
                     // Changing pblock->nTime can change work required on testnet:
@@ -773,7 +772,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
 
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet));
+        minerThreads->create_thread(boost::bind(&BitcoinAuxMiner, pwallet));
 }
 
 #endif // ENABLE_WALLET
