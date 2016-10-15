@@ -114,13 +114,13 @@ Object blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDe
         result.push_back(Pair("nextblockhash", pnext->GetBlockHash().GetHex()));
 
 	
-    if ( block.isAuxBlock() )
+    if ( block.IsAuxpow() )
     {
-        result.push_back(Pair("AuxBlock", ""));
+        result.push_back(Pair("AuxBlock", block.GetChainId()));
         result.push_back(Pair("ParentVersion", (boost::uint64_t)block.auxpow.get()->vParentBlockHeader.nVersion));
         result.push_back(Pair("ParentHashPrev", block.auxpow.get()->vParentBlockHeader.hashPrevBlock.ToString().c_str()));
-        result.push_back(Pair("ParentnBits", HexBits(block.auxpow.get()->vParentBlockHeader.nBits)));
-        result.push_back(Pair("ParentnPow", block.auxpow.get()->GetPoWHash(block.GetAlgo()).GetHex()));
+        result.push_back(Pair("ParentnBits", strprintf("%08x", block.auxpow.get()->vParentBlockHeader.nBits)));
+        result.push_back(Pair("ParentnPow", block.auxpow.get()->GetPoWHash().GetHex()));
         result.push_back(Pair("ParentScriptSig", HexStr(block.auxpow.get()->mMerkleTx.vin[0].scriptSig)));
         result.push_back(Pair("ParentSize", (int)::GetSerializeSize(*block.auxpow.get(), SER_NETWORK, PROTOCOL_VERSION)));
     }
