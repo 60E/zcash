@@ -423,7 +423,7 @@ static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& rese
     }
 
     // Remove key from key pool
-    reservekey.KeepKey();
+//    reservekey.KeepKey();
 
     // Track how many getdata requests this block gets
     {
@@ -530,7 +530,7 @@ void static BitcoinMiner(CWallet *pwallet)
 					SetThreadPriority(THREAD_PRIORITY_LOWEST);
 					
 					// In regression test mode, stop mining after a block is found.
-//					if (chainparams.MineBlocksOnDemand())
+					if (chainparams.MineBlocksOnDemand())
 						throw boost::thread_interrupted();
 				}
 
@@ -703,7 +703,7 @@ void static BitcoinAuxMiner(CWallet *pwallet)
 					SetThreadPriority(THREAD_PRIORITY_LOWEST);
 					
 					// In regression test mode, stop mining after a block is found.
-					//if (chainparams.MineBlocksOnDemand())
+					if (chainparams.MineBlocksOnDemand())
 						throw boost::thread_interrupted();
 				}
 
