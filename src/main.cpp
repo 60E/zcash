@@ -1365,6 +1365,41 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex)
     return true;
 }
 
+bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CDiskBlockPos& pos)
+{
+    block.SetNull();
+
+    // Open history file to read
+    CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
+    if (filein.IsNull())
+        return error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
+
+    // Read block
+    try {
+        filein >> block;
+    }
+    catch (const std::exception& e) {
+        return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
+    }
+
+    // Check the header
+    if (!(CheckEquihashSolution(&block, Params()) &&
+          CheckProofOfWork(block, Params().GetConsensus())))
+        return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+
+    return true;
+}
+
+bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex)
+{
+    if (!ReadBlockHeaderFromDisk(block, pindex->GetBlockPos()))
+        return false;
+    if (block.GetHash() != pindex->GetBlockHash())
+        return error("ReadBlockHeaderFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
+                     pindex->ToString(), pindex->GetBlockPos().ToString());
+    return true;
+}
+
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
     CAmount nSubsidy = 12.5 * COIN;
