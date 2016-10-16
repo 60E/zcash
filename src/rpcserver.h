@@ -264,6 +264,7 @@ extern json_spirit::Value z_getoperationstatus(const json_spirit::Array& params,
 extern json_spirit::Value z_getoperationresult(const json_spirit::Array& params, bool fHelp); // in rpcwallet.cpp
 extern json_spirit::Value z_listoperationids(const json_spirit::Array& params, bool fHelp); // in rpcwallet.cpp
 
+extern json_spirit::Value getauxblock(const json_spirit::Array& params, bool fHelp);
 
 // in rest.cpp
 extern bool HTTPReq_REST(AcceptedConnection *conn,

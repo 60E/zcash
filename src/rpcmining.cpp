@@ -798,3 +798,163 @@ Value getblocksubsidy(const Array& params, bool fHelp)
     result.push_back(Pair("founders", ValueFromAmount(nFoundersReward)));
     return result;
 }
+
+#ifdef ENABLE_WALLET
+/* ************************************************************************** */
+/* Merge mining.  */
+#include "wallet/wallet.h"
+static CReserveKey *pMiningKey = NULL;
+Value getauxblock(const Array& params, bool fHelp)
+{
+    if (fHelp || (params.size() != 0 && params.size() != 2))
+        throw std::runtime_error(
+                "getauxblock (hash auxpow)\n"
+                        "\nCreate or submit a merge-mined block.\n"
+                        "\nWithout arguments, create a new block and return information\n"
+                        "required to merge-mine it.  With arguments, submit a solved\n"
+                        "auxpow for a previously returned block.\n"
+                        "\nArguments:\n"
+                        "1. \"hash\"    (string, optional) hash of the block to submit\n"
+                        "2. \"auxpow\"  (string, optional) serialised auxpow found\n"
+                        "\nResult (without arguments):\n"
+                        "{\n"
+                        "  \"hash\"               (string) hash of the created block\n"
+                        "  \"chainid\"            (numeric) chain ID for this block\n"
+                        "  \"previousblockhash\"  (string) hash of the previous block\n"
+                        "  \"coinbasevalue\"      (numeric) value of the block's coinbase\n"
+                        "  \"bits\"               (string) compressed target of the block\n"
+                        "  \"height\"             (numeric) height of the block\n"
+                        "  \"_target\"            (string) target in reversed byte order, deprecated\n"
+                        "}\n"
+                        "\nResult (with arguments):\n"
+                        "xxxxx        (boolean) whether the submitted block was correct\n"
+                        "\nExamples:\n"
+                + HelpExampleCli("getauxblock", "")
+                + HelpExampleCli("getauxblock", "\"hash\" \"serialised auxpow\"")
+                + HelpExampleRpc("getauxblock", "")
+        );
+
+    if (NULL == pMiningKey)
+        pMiningKey = new CReserveKey(pwalletMain);
+
+//    boost::shared_ptr<CReserveKey> coinbaseScript;
+    //GetMainSignals().ScriptForMining(coinbaseScript);
+
+    // If the keypool is exhausted, no script is returned at all.  Catch this.
+//    if (!coinbaseScript)
+//        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+
+    //throw an error if no script was provided
+//    if (!coinbaseScript->reserveScript.size())
+//        throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available (mining requires a wallet)");
+
+    if (vNodes.empty() && !Params().MineBlocksOnDemand())
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED,
+                           "zcash is not connected!");
+
+    if (IsInitialBlockDownload() && !Params().MineBlocksOnDemand())
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD,
+                           "zcash is downloading blocks...");
+
+    /* The variables below are used to keep track of created and not yet
+       submitted auxpow blocks.  Lock them to be sure even for multiple
+       RPC threads running in parallel.  */
+    static CCriticalSection cs_auxblockCache;
+    LOCK(cs_auxblockCache);
+    static std::map<uint256, CBlock*> mapNewBlock;
+    static std::vector<std::unique_ptr<CBlockTemplate>> vNewBlockTemplate;
+
+    /* Create a new block?  */
+    if (params.size() == 0)
+    {
+        static unsigned nTransactionsUpdatedLast;
+        static const CBlockIndex* pindexPrev = nullptr;
+        static uint64_t nStart;
+        static CBlock* pblock = nullptr;
+        static unsigned nExtraNonce = 0;
+
+        // Update block
+        {
+            LOCK(cs_main);
+            if (pindexPrev != chainActive.Tip()
+                || (mempool.GetTransactionsUpdated() != nTransactionsUpdatedLast
+                    && GetTime() - nStart > 60))
+            {
+                if (pindexPrev != chainActive.Tip())
+                {
+                    // Clear old blocks since they're obsolete now.
+                    mapNewBlock.clear();
+                    vNewBlockTemplate.clear();
+                    pblock = nullptr;
+                }
+
+                // Create new block with nonce = 0 and extraNonce = 1
+                std::unique_ptr<CBlockTemplate> newBlock(CreateNewBlockWithKey(*pMiningKey));
+                if (!newBlock)
+                    throw JSONRPCError(RPC_OUT_OF_MEMORY, "out of memory");
+
+                // Update state only when CreateNewBlock succeeded
+                nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
+                pindexPrev = chainActive.Tip();
+                nStart = GetTime();
+
+                // Finalise it by setting the version and building the merkle root
+                IncrementExtraNonce(&newBlock->block, (CBlockIndex*)pindexPrev, nExtraNonce);
+                newBlock->block.SetAuxpowFlag(true);
+
+                // Save
+                pblock = &newBlock->block;
+                mapNewBlock[pblock->GetHash()] = pblock;
+                vNewBlockTemplate.push_back(std::move(newBlock));
+            }
+        }
+
+        arith_uint256 target;
+        bool fNegative, fOverflow;
+        target.SetCompact(pblock->nBits, &fNegative, &fOverflow);
+        if (fNegative || fOverflow || target == 0)
+            throw std::runtime_error("invalid difficulty bits in block");
+
+        Object result;
+        result.push_back(Pair("hash", pblock->GetHash().GetHex()));
+        result.push_back(Pair("chainid", pblock->GetChainId()));
+        result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
+        result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue));
+        result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
+        result.push_back(Pair("height", static_cast<int64_t> (pindexPrev->nHeight + 1)));
+        result.push_back(Pair("_target", HexStr(BEGIN(target), END(target))));
+
+        return result;
+    }
+
+    /* Submit a block instead.  Note that this need not lock cs_main,
+       since ProcessNewBlock below locks it instead.  */
+
+    assert(params.size() == 2);
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+
+    const std::map<uint256, CBlock*>::iterator mit = mapNewBlock.find(hash);
+    if (mit == mapNewBlock.end())
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "block hash unknown");
+    CBlock& block = *mit->second;
+
+    const std::vector<unsigned char> vchAuxPow = ParseHex(params[1].get_str());
+    CDataStream ss(vchAuxPow, SER_GETHASH, PROTOCOL_VERSION);
+    CAuxPow pow;
+    ss >> pow;
+    block.SetAuxpow(new CAuxPow(pow));
+    assert(block.GetHash() == hash);
+
+    CValidationState state;
+    submitblock_StateCatcher sc(block.GetHash());
+    RegisterValidationInterface(&sc);
+    bool fAccepted = ProcessNewBlock(state, NULL, &block, true, NULL);
+    UnregisterValidationInterface(&sc);
+
+//    if (fAccepted)
+//        coinbaseScript->KeepScript();
+
+    return fAccepted;
+}
+#endif
