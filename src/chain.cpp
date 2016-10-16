@@ -112,6 +112,7 @@ CBlockHeader CBlockIndex::GetBlockHeader() const
 {
     CBlockHeader block;
     block.nVersion       = nVersion;
+    block.nChainId       = nChainId;
 
     /* The CBlockIndex object's block header is missing the auxpow.
        So if this is an auxpow block, read it from disk instead.  We only
