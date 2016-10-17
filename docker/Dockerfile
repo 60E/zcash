@@ -12,8 +12,8 @@ RUN apt-get update && \
     	    autoconf libtool ncurses-dev unzip git python \
 	    zlib1g-dev wget bsdmainutils automake curl wget libzmq3-dev
 
-RUN git clone https://github.com/60E/zcash
-RUN cd zcash && git checkout 60E && ./zcutil/build.sh -j2
+RUN cd /root && git clone https://github.com/60E/zcash
+RUN cd /root/zcash && git checkout 60E && ./zcutil/build.sh
 
 RUN mkdir /root/.zcash
 
