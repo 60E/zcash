@@ -5,31 +5,34 @@ ENV HOME /root
 ENV TERM xterm
 CMD ["/sbin/my_init"]
 
-ADD sources.list.aliyun /etc/apt/sources.list
+COPY sources.list.aliyun /etc/apt/sources.list
 
-RUN apt-get update && \
-    apt-get install -y build-essential pkg-config libc6-dev m4 g++-multilib \
-    	    autoconf libtool ncurses-dev unzip git python \
-	    zlib1g-dev wget bsdmainutils automake curl wget libzmq3-dev
+RUN apt-get update && apt-get install -y \
+    build-essential pkg-config libc6-dev m4 g++-multilib \
+    autoconf libtool ncurses-dev unzip git python \
+    zlib1g-dev wget bsdmainutils automake curl wget libzmq3-dev
 
-RUN cd /root && git clone https://github.com/60E/zcash
-RUN cd /root/zcash && git checkout 60E && ./zcutil/build.sh
+WORKDIR /root/
 
-RUN mkdir /root/.zcash
+RUN git clone https://github.com/60E/zcash
+RUN cd zcash && git checkout 60E && ./zcutil/build.sh
 
-ADD xcash.conf /root/.zcash/zcash.conf
+RUN mkdir .zcash
 
-ADD logrotate-zcashd /etc/logrotate.d/zcashd
+COPY xcash.conf /root/.zcash/zcash.conf
+
+COPY logrotate-zcashd /etc/logrotate.d/zcashd
 
 RUN mkdir /etc/service/zcashd
-ADD run /etc/service/zcashd/run
+COPY run /etc/service/zcashd/run
 RUN chmod +x /etc/service/zcashd/run
+
+RUN  cd /root \
+     && wget https://antpool.com/zcash-params.tar.gz \
+     && tar zxvf zcash-params.tar.gz \
+     && rm zcash-params.tar.gz \
+     && mv zcash-params .zcash-params
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 EXPOSE 8234 18234 18445
-
-
-
-
-
