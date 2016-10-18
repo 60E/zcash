@@ -6,8 +6,7 @@ SDK_PATH ?= $(BASEDIR)/SDKs
 NO_QT ?=
 NO_WALLET ?=
 NO_UPNP ?=
-FALLBACK_DOWNLOAD_PATH ?= https://z.cash/depends-sources
-
+FALLBACK_DOWNLOAD_PATH ?= http://dcash.oss-cn-shanghai.aliyuncs.com/pkgs
 BUILD = $(shell ./config.guess)
 HOST ?= $(BUILD)
 PATCHES_PATH = $(BASEDIR)/patches
