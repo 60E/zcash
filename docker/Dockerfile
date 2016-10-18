@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /root/
 
 RUN git clone https://github.com/60E/zcash
-RUN cd zcash && git checkout 60E && ./zcutil/build.sh
+RUN cd zcash && git checkout docker && ./zcutil/build.sh
 
 RUN mkdir .zcash
 
