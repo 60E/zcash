@@ -806,13 +806,15 @@ Value getblocksubsidy(const Array& params, bool fHelp)
 static CReserveKey *pMiningKey = NULL;
 Value getauxblock(const Array& params, bool fHelp)
 {
-    if (fHelp || (params.size() != 0 && params.size() != 2))
+    if (fHelp || (params.size() > 2))
         throw std::runtime_error(
                 "getauxblock (hash auxpow)\n"
                         "\nCreate or submit a merge-mined block.\n"
-                        "\nWithout arguments, create a new block and return information\n"
-                        "required to merge-mine it.  With arguments, submit a solved\n"
+                        "\nWithout arguments or one argument, create a new block and return information\n"
+                        "required to merge-mine it.  With two arguments, submit a solved\n"
                         "auxpow for a previously returned block.\n"
+						"\nArguments:\n"
+						"1. \"address\"	(string, optional) address for mining\n"
                         "\nArguments:\n"
                         "1. \"hash\"    (string, optional) hash of the block to submit\n"
                         "2. \"auxpow\"  (string, optional) serialised auxpow found\n"
@@ -833,9 +835,6 @@ Value getauxblock(const Array& params, bool fHelp)
                 + HelpExampleCli("getauxblock", "\"hash\" \"serialised auxpow\"")
                 + HelpExampleRpc("getauxblock", "")
         );
-
-    if (NULL == pMiningKey)
-        pMiningKey = new CReserveKey(pwalletMain);
 
 //    boost::shared_ptr<CReserveKey> coinbaseScript;
     //GetMainSignals().ScriptForMining(coinbaseScript);
@@ -865,7 +864,7 @@ Value getauxblock(const Array& params, bool fHelp)
     static std::vector<std::unique_ptr<CBlockTemplate>> vNewBlockTemplate;
 
     /* Create a new block?  */
-    if (params.size() == 0)
+    if (params.size() <= 1)
     {
         static unsigned nTransactionsUpdatedLast;
         static const CBlockIndex* pindexPrev = nullptr;
@@ -889,7 +888,24 @@ Value getauxblock(const Array& params, bool fHelp)
                 }
 
                 // Create new block with nonce = 0 and extraNonce = 1
-                std::unique_ptr<CBlockTemplate> newBlock(CreateNewBlockWithKey(*pMiningKey));
+                CScript scriptPubKey;
+                if (params.size() == 1)
+            	{
+            		CBitcoinAddress address(params[0].get_str());
+					scriptPubKey = GetScriptForDestination(address.Get());
+					//CPubKey pubkey(ParseHex(params[0].get_str()));
+					//scriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+            	}
+				else
+				{
+					if (NULL == pMiningKey)
+						pMiningKey = new CReserveKey(pwalletMain);
+					
+		            CPubKey walletkey;
+					pMiningKey->GetReservedKey(walletkey);
+					scriptPubKey = CScript() << ToByteVector(walletkey) << OP_CHECKSIG;
+				}
+                std::unique_ptr<CBlockTemplate> newBlock(CreateNewBlock(scriptPubKey));
                 if (!newBlock)
                     throw JSONRPCError(RPC_OUT_OF_MEMORY, "out of memory");
 
