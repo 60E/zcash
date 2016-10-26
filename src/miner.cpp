@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "miner.h"
+#include "pow/tromp/equi_miner.h"
 
 #include "amount.h"
 #include "chainparams.h"
@@ -11,6 +12,7 @@
 #include "consensus/validation.h"
 #include "hash.h"
 #include "main.h"
+#include "metrics.h"
 #include "net.h"
 #include "pow.h"
 #include "primitives/transaction.h"
@@ -436,6 +438,8 @@ static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& rese
     if (!ProcessNewBlock(state, NULL, pblock, true, NULL))
         return error("ZcashMiner: ProcessNewBlock, block not accepted");
 
+    minedBlocks.increment();
+
     return true;
 }
 
@@ -452,6 +456,10 @@ void static BitcoinMiner(CWallet *pwallet)
 
     unsigned int n = chainparams.EquihashN();
     unsigned int k = chainparams.EquihashK();
+
+    std::string solver = GetArg("-equihashsolver", "default");
+    assert(solver == "tromp" || solver == "default");
+    LogPrint("pow", "Using Equihash solver \"%s\" with n = %u, k = %u\n", solver, n, k);
 
     std::mutex m_cs;
     bool cancelSolver = false;
@@ -504,6 +512,7 @@ void static BitcoinMiner(CWallet *pwallet)
             int64_t nStart = GetTime();
             arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
 
+
 			bool foundResult = false;
             while (!foundResult) {
 
@@ -537,7 +546,6 @@ void static BitcoinMiner(CWallet *pwallet)
 				if (foundResult)
 					break;
 				
-
                 // Check for stop or if block needs to be rebuilt
                 boost::this_thread::interruption_point();
                 // Regtest mode doesn't require peers
