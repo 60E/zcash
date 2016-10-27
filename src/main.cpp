@@ -1405,6 +1405,7 @@ bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex)
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
+#if 0
     CAmount nSubsidy = 12.5 * COIN;
 
     // Mining slow start
@@ -1427,6 +1428,15 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
         return 0;
 
     // Subsidy is cut in half every 840,000 blocks which will occur approximately every 4 years.
+    nSubsidy >>= halvings;
+    return nSubsidy;
+#endif
+    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+
+    if (halvings >= 64)
+        return 0;
+
+    CAmount nSubsidy = 50 * COIN;
     nSubsidy >>= halvings;
     return nSubsidy;
 }
@@ -3134,6 +3144,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
         }
     }
 
+#if 0
     // Coinbase transaction must include an output sending 20% of
     // the block reward to a founders reward script, until the last founders
     // reward block is reached, with exception of the genesis block.
@@ -3155,7 +3166,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
             return state.DoS(100, error("%s: founders reward missing", __func__), REJECT_INVALID, "cb-no-founders-reward");
         }
     }
-
+#endif
     return true;
 }
 
