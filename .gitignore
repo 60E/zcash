@@ -125,3 +125,10 @@ qa/pull-tester/test.*/*
 CMakeLists.txt
 libzcashconsensus.pc
 
+libbitcoinconsensus.pc
+src/bitcoin-tx
+src/hcash-cli
+src/hcash-gtest
+src/hcash-tx
+src/hcashd
+

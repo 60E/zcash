@@ -77,7 +77,7 @@ void printMiningStatus(bool mining)
         std::cout << strprintf(_("You are running %d mining threads."), nThreads) << std::endl;
     } else {
         std::cout << _("You are currently not mining.") << std::endl;
-        std::cout << _("To enable mining, add 'gen=1' to your zcash.conf and restart.") << std::endl;
+        std::cout << _("To enable mining, add 'gen=1' to your hcash.conf and restart.") << std::endl;
     }
     std::cout << std::endl;
 }
@@ -178,7 +178,7 @@ void ThreadShowMetricsScreen()
     std::cout << std::endl;
 
     // Thank you text
-    std::cout << _("Thank you for running a Zcash node!") << std::endl;
+    std::cout << _("Thank you for running a Hcash node!") << std::endl;
     std::cout << _("You're helping to strengthen the network and contributing to a social good :)") << std::endl;
     std::cout << std::endl;
 

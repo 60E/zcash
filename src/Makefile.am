@@ -62,11 +62,11 @@ bin_PROGRAMS =
 TESTS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += zcashd
+  bin_PROGRAMS += hcashd
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += zcash-cli zcash-tx
+  bin_PROGRAMS += hcash-cli hcash-tx
 endif
 
 LIBZCASH_H = \
@@ -349,15 +349,15 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # bitcoind binary #
-zcashd_SOURCES = bitcoind.cpp
-zcashd_CPPFLAGS = $(BITCOIN_INCLUDES)
-zcashd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+hcashd_SOURCES = bitcoind.cpp
+hcashd_CPPFLAGS = $(BITCOIN_INCLUDES)
+hcashd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-zcashd_SOURCES += bitcoind-res.rc
+hcashd_SOURCES += bitcoind-res.rc
 endif
 
-zcashd_LDADD = \
+hcashd_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UNIVALUE) \
@@ -369,10 +369,10 @@ zcashd_LDADD = \
   $(LIBSECP256K1)
 
 if ENABLE_WALLET
-zcashd_LDADD += libbitcoin_wallet.a
+hcashd_LDADD += libbitcoin_wallet.a
 endif
 
-zcashd_LDADD += \
+hcashd_LDADD += \
   $(BOOST_LIBS) \
   $(BDB_LIBS) \
   $(SSL_LIBS) \
@@ -384,15 +384,15 @@ zcashd_LDADD += \
 #
 
 # bitcoin-cli binary #
-zcash_cli_SOURCES = bitcoin-cli.cpp
-zcash_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
-zcash_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+hcash_cli_SOURCES = bitcoin-cli.cpp
+hcash_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
+hcash_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-zcash_cli_SOURCES += bitcoin-cli-res.rc
+hcash_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
-zcash_cli_LDADD = \
+hcash_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_UTIL) \
   $(BOOST_LIBS) \
@@ -403,17 +403,17 @@ zcash_cli_LDADD = \
   $(LIBZCASH_LIBS)
 #
 
-# zcash-tx binary #
-zcash_tx_SOURCES = bitcoin-tx.cpp
-zcash_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
-zcash_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+# hcash-tx binary #
+hcash_tx_SOURCES = bitcoin-tx.cpp
+hcash_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
+hcash_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-zcash_tx_SOURCES += bitcoin-tx-res.rc
+hcash_tx_SOURCES += bitcoin-tx-res.rc
 endif
 
 # FIXME: Is libzcash needed for zcash_tx?
-zcash_tx_LDADD = \
+hcash_tx_LDADD = \
   $(LIBBITCOIN_UNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -422,7 +422,7 @@ zcash_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBZCASH_LIBS)
 
-zcash_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+hcash_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 # zcash protocol primitives #

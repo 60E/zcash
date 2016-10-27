@@ -381,7 +381,7 @@ static std::string FormatException(const std::exception* pex, const char* pszThr
     char pszModule[MAX_PATH] = "";
     GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
 #else
-    const char* pszModule = "Zcash";
+    const char* pszModule = "Hcash";
 #endif
     if (pex)
         return strprintf(
@@ -402,13 +402,13 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Zcash
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Zcash
-    // Mac: ~/Library/Application Support/Zcash
-    // Unix: ~/.zcash
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\Hcash
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\Hcash
+    // Mac: ~/Library/Application Support/Hcash
+    // Unix: ~/.hcash
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Zcash";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Hcash";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -420,10 +420,10 @@ boost::filesystem::path GetDefaultDataDir()
     // Mac
     pathRet /= "Library/Application Support";
     TryCreateDirectory(pathRet);
-    return pathRet / "Zcash";
+    return pathRet / "Hcash";
 #else
     // Unix
-    return pathRet / ".zcash";
+    return pathRet / ".hcash";
 #endif
 #endif
 }
@@ -438,13 +438,13 @@ static boost::filesystem::path ZC_GetBaseParamsDir()
     // Copied from GetDefaultDataDir and adapter for zcash params.
 
     namespace fs = boost::filesystem;
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\ZcashParams
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\ZcashParams
-    // Mac: ~/Library/Application Support/ZcashParams
-    // Unix: ~/.zcash-params
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\HcashParams
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\HcashParams
+    // Mac: ~/Library/Application Support/HcashParams
+    // Unix: ~/.hcash-params
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "ZcashParams";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "HcashParams";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -456,10 +456,10 @@ static boost::filesystem::path ZC_GetBaseParamsDir()
     // Mac
     pathRet /= "Library/Application Support";
     TryCreateDirectory(pathRet);
-    return pathRet / "ZcashParams";
+    return pathRet / "HcashParams";
 #else
     // Unix
-    return pathRet / ".zcash-params";
+    return pathRet / ".hcash-params";
 #endif
 #endif
 }
@@ -520,7 +520,7 @@ void ClearDatadirCache()
 
 boost::filesystem::path GetConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-conf", "zcash.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-conf", "hcash.conf"));
     if (!pathConfigFile.is_complete())
         pathConfigFile = GetDataDir(false) / pathConfigFile;
 
@@ -532,14 +532,14 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 {
     boost::filesystem::ifstream streamConfig(GetConfigFile());
     if (!streamConfig.good())
-        return; // No zcash.conf file is OK
+        return; // No hcash.conf file is OK
 
     set<string> setOptions;
     setOptions.insert("*");
 
     for (boost::program_options::detail::config_file_iterator it(streamConfig, setOptions), end; it != end; ++it)
     {
-        // Don't overwrite existing settings so command line settings override zcash.conf
+        // Don't overwrite existing settings so command line settings override hcash.conf
         string strKey = string("-") + it->string_key;
         if (mapSettingsRet.count(strKey) == 0)
         {
@@ -556,7 +556,7 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 #ifndef WIN32
 boost::filesystem::path GetPidFile()
 {
-    boost::filesystem::path pathPidFile(GetArg("-pid", "zcashd.pid"));
+    boost::filesystem::path pathPidFile(GetArg("-pid", "hcashd.pid"));
     if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
     return pathPidFile;
 }
