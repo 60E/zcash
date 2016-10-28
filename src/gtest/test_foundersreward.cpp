@@ -15,7 +15,7 @@
 #include "util.h"
 
 // To run tests:
-// ./zcash-gtest --gtest_filter="founders_reward_test.*"
+// ./hcash-gtest --gtest_filter="founders_reward_test.*"
 
 //
 // Enable this test to generate and print 48 testnet 2-of-3 multisig addresses.

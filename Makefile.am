@@ -43,7 +43,7 @@ COVERAGE_INFO = baseline_filtered_combined.info baseline.info block_test.info \
   leveldb_baseline.info test_bitcoin_filtered.info total_coverage.info \
   baseline_filtered.info block_test_filtered.info \
   leveldb_baseline_filtered.info test_bitcoin_coverage.info test_bitcoin.info \
-  zcash-gtest.info zcash-gtest_filtered.info zcash-gtest_coverage.info
+  hcash-gtest.info hcash-gtest_filtered.info hcash-gtest_coverage.info
 
 dist-hook:
 	-$(MAKE) -C $(top_distdir)/src/leveldb clean
@@ -192,13 +192,13 @@ test_bitcoin_filtered.info: test_bitcoin.info
                       "$(abs_builddir)/src/test/*" \
                       -o $@
 
-zcash-gtest.info: baseline_filtered_combined.info
-	$(MAKE) -C src/ zcash-gtest_check
-	$(LCOV) -c -d $(abs_builddir)/src -t zcash-gtest -o $@
+hcash-gtest.info: baseline_filtered_combined.info
+	$(MAKE) -C src/ hcash-gtest_check
+	$(LCOV) -c -d $(abs_builddir)/src -t hcash-gtest -o $@
 	$(LCOV) -z -d $(abs_builddir)/src
 	$(LCOV) -z -d $(abs_builddir)/src/leveldb
 
-zcash-gtest_filtered.info: zcash-gtest.info
+hcash-gtest_filtered.info: hcash-gtest.info
 	$(LCOV) -r $< "/usr/include/*" \
                       "$(abs_builddir)/depends/x86_64-unknown-linux-gnu/include/*.h" \
                       "$(abs_builddir)/depends/x86_64-unknown-linux-gnu/include/boost/*" \
@@ -228,21 +228,21 @@ block_test_filtered.info: block_test.info
 test_bitcoin_coverage.info: baseline_filtered_combined.info test_bitcoin_filtered.info
 	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_bitcoin_filtered.info -o $@
 
-zcash-gtest_coverage.info: baseline_filtered_combined.info zcash-gtest_filtered.info
-	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a zcash-gtest_filtered.info -o $@
+hcash-gtest_coverage.info: baseline_filtered_combined.info hcash-gtest_filtered.info
+	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a hcash-gtest_filtered.info -o $@
 
-total_coverage.info:  baseline_filtered_combined.info test_bitcoin_filtered.info zcash-gtest_filtered.info block_test_filtered.info
-	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_bitcoin_filtered.info -a zcash-gtest_filtered.info -a block_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
+total_coverage.info:  baseline_filtered_combined.info test_bitcoin_filtered.info hcash-gtest_filtered.info block_test_filtered.info
+	$(LCOV) -a baseline_filtered.info -a leveldb_baseline_filtered.info -a test_bitcoin_filtered.info -a hcash-gtest_filtered.info -a block_test_filtered.info -o $@ | $(GREP) "\%" | $(AWK) '{ print substr($$3,2,50) "/" $$5 }' > coverage_percent.txt
 
 test_bitcoin.coverage/.dirstamp:  test_bitcoin_coverage.info
 	$(GENHTML) -s $< -o $(@D)
 	@touch $@
 
-zcash-gtest.coverage/.dirstamp:  zcash-gtest_coverage.info
+hcash-gtest.coverage/.dirstamp:  hcash-gtest_coverage.info
 	$(GENHTML) -s $< -o $(@D)
 	@touch $@
 
-cov-zcash: zcash-gtest.coverage/.dirstamp
+cov-zcash: hcash-gtest.coverage/.dirstamp
 
 total.coverage/.dirstamp: total_coverage.info
 	$(GENHTML) -s $< -o $(@D)
@@ -267,4 +267,4 @@ CLEANFILES = $(OSX_DMG) $(BITCOIN_WIN_INSTALLER)
 .INTERMEDIATE: $(COVERAGE_INFO)
 
 clean-local:
-	rm -rf test_bitcoin.coverage/ zcash-gtest.coverage/ total.coverage/ $(OSX_APP)
+	rm -rf test_bitcoin.coverage/ hcash-gtest.coverage/ total.coverage/ $(OSX_APP)
