@@ -5,7 +5,7 @@ set -e
 DATADIR=./benchmark-datadir
 
 function zcash_rpc {
-    ./src/zcash-cli -rpcwait -rpcuser=user -rpcpassword=password -rpcport=5983 "$@"
+    ./src/hcash-cli -rpcwait -rpcuser=user -rpcpassword=password -rpcport=5983 "$@"
 }
 
 function hcashd_generate {
