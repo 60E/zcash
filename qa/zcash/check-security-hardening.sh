@@ -29,7 +29,7 @@ function test_fortify_source {
 # PIE, RELRO, Canary, and NX are tested by make check-security.
 make -C "$REPOROOT/src" check-security
 
-test_rpath_runpath "${REPOROOT}/src/zcashd"
+test_rpath_runpath "${REPOROOT}/src/hcashd"
 test_rpath_runpath "${REPOROOT}/src/zcash-cli"
 test_rpath_runpath "${REPOROOT}/src/zcash-gtest"
 test_rpath_runpath "${REPOROOT}/src/zcash-tx"
@@ -38,7 +38,7 @@ test_rpath_runpath "${REPOROOT}/src/zcash/GenerateParams"
 
 # NOTE: checksec.sh does not reliably determine whether FORTIFY_SOURCE is
 # enabled for the entire binary. See issue #915.
-test_fortify_source "${REPOROOT}/src/zcashd"
+test_fortify_source "${REPOROOT}/src/hcashd"
 test_fortify_source "${REPOROOT}/src/zcash-cli"
 test_fortify_source "${REPOROOT}/src/zcash-gtest"
 test_fortify_source "${REPOROOT}/src/zcash-tx"

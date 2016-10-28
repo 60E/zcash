@@ -1,4 +1,4 @@
 #! /bin/bash
 export HOME=/root
 cd /root/zcash/src
-./zcashd
+./hcashd

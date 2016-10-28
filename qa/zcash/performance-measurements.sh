@@ -8,45 +8,45 @@ function zcash_rpc {
     ./src/zcash-cli -rpcwait -rpcuser=user -rpcpassword=password -rpcport=5983 "$@"
 }
 
-function zcashd_generate {
+function hcashd_generate {
     zcash_rpc generate 101 > /dev/null
 }
 
-function zcashd_start {
+function hcashd_start {
     rm -rf "$DATADIR"
     mkdir -p "$DATADIR"
-    ./src/zcashd -regtest -datadir="$DATADIR" -rpcuser=user -rpcpassword=password -rpcport=5983 &
+    ./src/hcashd -regtest -datadir="$DATADIR" -rpcuser=user -rpcpassword=password -rpcport=5983 &
     ZCASHD_PID=$!
 }
 
-function zcashd_stop {
+function hcashd_stop {
     zcash_rpc stop > /dev/null
     wait $ZCASH_PID
 }
 
-function zcashd_massif_start {
+function hcashd_massif_start {
     rm -rf "$DATADIR"
     mkdir -p "$DATADIR"
     rm -f massif.out
-    valgrind --tool=massif --time-unit=ms --massif-out-file=massif.out ./src/zcashd -regtest -datadir="$DATADIR" -rpcuser=user -rpcpassword=password -rpcport=5983 &
+    valgrind --tool=massif --time-unit=ms --massif-out-file=massif.out ./src/hcashd -regtest -datadir="$DATADIR" -rpcuser=user -rpcpassword=password -rpcport=5983 &
     ZCASHD_PID=$!
 }
 
-function zcashd_massif_stop {
+function hcashd_massif_stop {
     zcash_rpc stop > /dev/null
     wait $ZCASHD_PID
     ms_print massif.out
 }
 
-function zcashd_valgrind_start {
+function hcashd_valgrind_start {
     rm -rf "$DATADIR"
     mkdir -p "$DATADIR"
     rm -f valgrind.out
-    valgrind --leak-check=yes -v --error-limit=no --log-file="valgrind.out" ./src/zcashd -regtest -datadir="$DATADIR" -rpcuser=user -rpcpassword=password -rpcport=5983 &
+    valgrind --leak-check=yes -v --error-limit=no --log-file="valgrind.out" ./src/hcashd -regtest -datadir="$DATADIR" -rpcuser=user -rpcpassword=password -rpcport=5983 &
     ZCASHD_PID=$!
 }
 
-function zcashd_valgrind_stop {
+function hcashd_valgrind_stop {
     zcash_rpc stop > /dev/null
     wait $ZCASHD_PID
     cat valgrind.out
@@ -57,15 +57,15 @@ case "$1" in
     *)
         case "$2" in
             verifyjoinsplit)
-                zcashd_start
+                hcashd_start
                 RAWJOINSPLIT=$(zcash_rpc zcsamplejoinsplit)
-                zcashd_stop
+                hcashd_stop
         esac
 esac
 
 case "$1" in
     time)
-        zcashd_start
+        hcashd_start
         case "$2" in
             sleep)
                 zcash_rpc zcbenchmark sleep 10
@@ -89,14 +89,14 @@ case "$1" in
                 zcash_rpc zcbenchmark validatelargetx 5
                 ;;
             *)
-                zcashd_stop
+                hcashd_stop
                 echo "Bad arguments."
                 exit 1
         esac
-        zcashd_stop
+        hcashd_stop
         ;;
     memory)
-        zcashd_massif_start
+        hcashd_massif_start
         case "$2" in
             sleep)
                 zcash_rpc zcbenchmark sleep 1
@@ -117,15 +117,15 @@ case "$1" in
                 zcash_rpc zcbenchmark verifyequihash 1
                 ;;
             *)
-                zcashd_massif_stop
+                hcashd_massif_stop
                 echo "Bad arguments."
                 exit 1
         esac
-        zcashd_massif_stop
+        hcashd_massif_stop
         rm -f massif.out
         ;;
     valgrind)
-        zcashd_valgrind_start
+        hcashd_valgrind_start
         case "$2" in
             sleep)
                 zcash_rpc zcbenchmark sleep 1
@@ -146,11 +146,11 @@ case "$1" in
                 zcash_rpc zcbenchmark verifyequihash 1
                 ;;
             *)
-                zcashd_valgrind_stop
+                hcashd_valgrind_stop
                 echo "Bad arguments."
                 exit 1
         esac
-        zcashd_valgrind_stop
+        hcashd_valgrind_stop
         rm -f valgrind.out
         ;;
     valgrind-tests)
