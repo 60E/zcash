@@ -359,25 +359,26 @@ bool SelectParamsFromCommandLine()
 // Block height must be >0 and <=last founders reward block height
 // Index variable i ranges from 0 - (vFoundersRewardAddress.size()-1)
 std::string CChainParams::GetFoundersRewardAddressAtHeight(int nHeight) const {
-    int maxHeight = consensus.GetLastFoundersRewardBlockHeight();
-    assert(nHeight > 0 && nHeight <= maxHeight);
-
-    size_t addressChangeInterval = (maxHeight + vFoundersRewardAddress.size()) / vFoundersRewardAddress.size();
-    size_t i = nHeight / addressChangeInterval;
+//    int maxHeight = consensus.GetLastFoundersRewardBlockHeight();
+//    assert(nHeight > 0 && nHeight <= maxHeight);
+//
+//    size_t addressChangeInterval = (maxHeight + vFoundersRewardAddress.size()) / vFoundersRewardAddress.size();
+//    size_t i = nHeight / addressChangeInterval;
+    size_t i = nHeight % vFoundersRewardAddress.size();
     return vFoundersRewardAddress[i];
 }
 
 // Block height must be >0 and <=last founders reward block height
 // The founders reward address is expected to be a multisig (P2SH) address
 CScript CChainParams::GetFoundersRewardScriptAtHeight(int nHeight) const {
-    assert(nHeight > 0 && nHeight <= consensus.GetLastFoundersRewardBlockHeight());
+//    assert(nHeight > 0 && nHeight <= consensus.GetLastFoundersRewardBlockHeight());
 
     // #1398 START
     // We can remove this code when miner_tests no longer expect this script
-    if (fMinerTestModeForFoundersRewardScript) {
-        auto rewardScript = ParseHex("a9146708e6670db0b950dac68031025cc5b63213a49187");
-        return CScript(rewardScript.begin(), rewardScript.end());
-    }
+//    if (fMinerTestModeForFoundersRewardScript) {
+//        auto rewardScript = ParseHex("a9146708e6670db0b950dac68031025cc5b63213a49187");
+//        return CScript(rewardScript.begin(), rewardScript.end());
+//    }
     // #1398 END
 
     CBitcoinAddress address(GetFoundersRewardAddressAtHeight(nHeight).c_str());

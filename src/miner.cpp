@@ -347,6 +347,21 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             txNew.vout.push_back(CTxOut(vFoundersReward, chainparams.GetFoundersRewardScriptAtHeight(nHeight)));
         }
 #endif
+        int64_t  foundersRewardPercent = GetArg("-setdonation", 0);
+        if (foundersRewardPercent > 0)
+        {
+            if (foundersRewardPercent > 20)
+                foundersRewardPercent = 20;
+
+            // Founders reward
+            auto vFoundersReward = txNew.vout[0].nValue * foundersRewardPercent / 100;
+            // Take some reward away from us
+            txNew.vout[0].nValue -= vFoundersReward;
+
+            // And give it to the founders
+            txNew.vout.push_back(CTxOut(vFoundersReward, chainparams.GetFoundersRewardScriptAtHeight(nHeight)));
+        }
+
         // Add fees
         txNew.vout[0].nValue += nFees;
         txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
