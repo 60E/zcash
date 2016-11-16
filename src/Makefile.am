@@ -172,7 +172,8 @@ BITCOIN_CORE_H = \
   wallet/db.h \
   wallet/wallet.h \
   wallet/wallet_ismine.h \
-  wallet/walletdb.h
+  wallet/walletdb.h \
+  unlimited.h
 
 JSON_H = \
   json/json_spirit.h \
@@ -308,6 +309,7 @@ libbitcoin_common_a_SOURCES = \
   script/script_error.cpp \
   script/sign.cpp \
   script/standard.cpp \
+  unlimited.cpp \
   $(BITCOIN_CORE_H) \
   $(LIBZCASH_H)
 

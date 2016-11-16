@@ -31,6 +31,7 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/thread.hpp>
 #include "json/json_spirit_writer_template.h"
+#include "unlimited.h"
 
 using namespace boost::asio;
 using namespace json_spirit;
@@ -284,6 +285,8 @@ static const CRPCCommand vRPCCommands[] =
     { "network",            "getnettotals",           &getnettotals,           true  },
     { "network",            "getpeerinfo",            &getpeerinfo,            true  },
     { "network",            "ping",                   &ping,                   true  },
+    { "network",            "getexcessiveblock",      &getexcessiveblock,      true  },  // BU
+    { "network",            "setexcessiveblock",      &setexcessiveblock,      true  },  // BU
 
     /* Block chain and UTXO */
     { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true  },

@@ -14,6 +14,7 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
+#include "unlimited.h"
 
 /* Introduction text for doxygen: */
 
@@ -152,6 +153,7 @@ bool AppInit(int argc, char* argv[])
         PrintExceptionContinue(NULL, "AppInit()");
     }
 
+    UnlimitedSetup();
     if (!fRet)
     {
         threadGroup.interrupt_all();
