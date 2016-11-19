@@ -48,6 +48,21 @@ void UnlimitedSetup(void)
     //settingsToUserAgentString();
 }
 
+int chainContainsExcessive(const CBlockIndex* blk, unsigned int goBack)
+{
+    if (goBack == 0)
+        goBack = excessiveAcceptDepth+EXCESSIVE_BLOCK_CHAIN_RESET;
+
+    for (unsigned int i = 0; i < goBack; i++, blk = blk->pprev)
+    {
+        if (!blk)
+            break; // we hit the beginning
+        if (blk->nStatus & BLOCK_EXCESSIVE)
+            return true;
+    }
+    return false;
+}
+
 Value getexcessiveblock(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)

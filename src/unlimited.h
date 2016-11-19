@@ -32,5 +32,7 @@ extern void UnlimitedSetup(void);
 extern json_spirit::Value getexcessiveblock(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value setexcessiveblock(const json_spirit::Array& params, bool fHelp);
 
+extern int chainContainsExcessive(const CBlockIndex* blk, unsigned int goBack);
+
 #endif
 

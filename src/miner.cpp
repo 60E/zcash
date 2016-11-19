@@ -31,7 +31,7 @@
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <mutex>
-
+#include "unlimited.h"
 using namespace std;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -118,9 +118,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     pblocktemplate->vTxSigOps.push_back(-1); // updated at end
 
     // Largest block you're willing to create:
-    unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+    //unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
     // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
-    nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SIZE-1000), nBlockMaxSize));
+    unsigned int nBlockMaxSize = maxGeneratedBlock - 1000; // std::max((unsigned int)1000, std::min((unsigned int)(maxGeneratedBlock-1000), nBlockMaxSize));
 
     // How much of the block should be dedicated to high-priority transactions,
     // included regardless of the fees they pay
