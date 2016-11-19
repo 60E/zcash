@@ -35,6 +35,7 @@
 #include <boost/math/distributions/poisson.hpp>
 #include <boost/thread.hpp>
 #include <boost/static_assert.hpp>
+#include "unlimited.h"
 
 using namespace std;
 
@@ -2578,42 +2579,84 @@ static CBlockIndex* FindMostWorkChain() {
         // Just going until the active chain is an optimization, as we know all blocks in it are valid already.
         CBlockIndex *pindexTest = pindexNew;
         bool fInvalidAncestor = false;
-        while (pindexTest && !chainActive.Contains(pindexTest)) {
+        uint64_t depth=0;
+        bool fFailedChain = false;
+        bool fMissingData = false;
+        bool fRecentExcessive = false;  // Has there been a excessive block within our accept depth?
+        bool fOldExcessive = false;     // Was there an excessive block prior to our accept depth (if so we ignore the accept depth -- this chain has already been accepted as valid)
+        while (pindexTest && !chainActive.Contains(pindexTest)) {  // follow the chain all the way back to where it joins the current active chain.
             assert(pindexTest->nChainTx || pindexTest->nHeight == 0);
 
             // Pruned nodes may have entries in setBlockIndexCandidates for
             // which block files have been deleted.  Remove those as candidates
             // for the most work chain if we come across them; we can't switch
             // to a chain unless we have all the non-active-chain parent blocks.
-            bool fFailedChain = pindexTest->nStatus & BLOCK_FAILED_MASK;
-            bool fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
-            if (fFailedChain || fMissingData) {
-                // Candidate chain is not usable (either invalid or missing data)
-                if (fFailedChain && (pindexBestInvalid == NULL || pindexNew->nChainWork > pindexBestInvalid->nChainWork))
-                    pindexBestInvalid = pindexNew;
-                CBlockIndex *pindexFailed = pindexNew;
-                // Remove the entire chain from the set.
-                while (pindexTest != pindexFailed) {
-                    if (fFailedChain) {
-                        pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
-                    } else if (fMissingData) {
-                        // If we're missing data, then add back to mapBlocksUnlinked,
-                        // so that if the block arrives in the future we can try adding
-                        // to setBlockIndexCandidates again.
-                        mapBlocksUnlinked.insert(std::make_pair(pindexFailed->pprev, pindexFailed));
-                    }
-                    setBlockIndexCandidates.erase(pindexFailed);
-                    pindexFailed = pindexFailed->pprev;
-                }
-                setBlockIndexCandidates.erase(pindexTest);
-                fInvalidAncestor = true;
-                break;
+            fFailedChain = pindexTest->nStatus & BLOCK_FAILED_MASK;
+            fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
+            if (depth < excessiveAcceptDepth)
+            {
+                fRecentExcessive |= ((pindexTest->nStatus & BLOCK_EXCESSIVE) != 0);  // Unlimited: deny this candidate chain if there's a recent excessive block
             }
+            else
+            {
+                fOldExcessive |= ((pindexTest->nStatus & BLOCK_EXCESSIVE) != 0);  // Unlimited: unless there is an even older excessive block
+            }
+
+            if (fFailedChain | fMissingData | fRecentExcessive) break;
             pindexTest = pindexTest->pprev;
+            depth++;
         }
+
+        // If there was a recent excessive block, check a certain distance beyond the acceptdepth to see if this chain has already seen an excessive block... if it has then allow the chain.
+        // This stops the client from always tracking excessiveDepth blocks behind the chain tip in a situation where lots of excessive blocks are being created.
+        // But after a while with no excessive blocks, we reset and our reluctance to accept an excessive block resumes on this chain.
+        // An alternate algorithm would be to move the excessive block size up to match the size of the accepted block, but this changes a user-defined field and is awkward to code because
+        // block sizes are not saved.
+        if ((fRecentExcessive && !fOldExcessive)&&(depth<excessiveAcceptDepth+EXCESSIVE_BLOCK_CHAIN_RESET))
+        {
+            CBlockIndex *chain = pindexTest;
+            while (chain && (depth<excessiveAcceptDepth)) // skip accept depth blocks, we are looking for an older excessive
+            {
+                chain = chain->pprev;
+                depth++;
+            }
+
+            while (chain && (depth<excessiveAcceptDepth+EXCESSIVE_BLOCK_CHAIN_RESET))
+            {
+                fOldExcessive |= ((chain->nStatus & BLOCK_EXCESSIVE) != 0);
+                chain = chain->pprev;
+                depth++;
+            }
+        }
+
+        // Conditions where we want to reject the chain
+        if (fFailedChain || fMissingData || (fRecentExcessive && !fOldExcessive))
+        {
+            // Candidate chain is not usable (either invalid or missing data)
+            if (fFailedChain && (pindexBestInvalid == NULL || pindexNew->nChainWork > pindexBestInvalid->nChainWork))
+                pindexBestInvalid = pindexNew;
+            CBlockIndex *pindexFailed = pindexNew;
+            // Remove the entire chain from the set.
+            while (pindexTest != pindexFailed) {
+                if (fFailedChain) {
+                    pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
+                } else if (fMissingData || (fRecentExcessive && !fOldExcessive)) {
+                    // If we're missing data, then add back to mapBlocksUnlinked,
+                    // so that if the block arrives in the future we can try adding
+                    // to setBlockIndexCandidates again.
+                    mapBlocksUnlinked.insert(std::make_pair(pindexFailed->pprev, pindexFailed));
+                }
+                setBlockIndexCandidates.erase(pindexFailed);
+                pindexFailed = pindexFailed->pprev;
+            }
+            setBlockIndexCandidates.erase(pindexTest);
+            fInvalidAncestor = true;
+        }
+
         if (!fInvalidAncestor)
             return pindexNew;
     } while(true);
+    assert(0); // should never get here
 }
 
 /** Delete all entries in setBlockIndexCandidates that are worse than the current tip. */
@@ -2864,6 +2907,7 @@ bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBl
     pindexNew->nDataPos = pos.nPos;
     pindexNew->nUndoPos = 0;
     pindexNew->nStatus |= BLOCK_HAVE_DATA;
+    if (block.fExcessive) pindexNew->nStatus |= BLOCK_EXCESSIVE;
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
     setDirtyBlockIndex.insert(pindexNew);
 
@@ -3018,6 +3062,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 {
     // These are checks that are independent of context.
 
+    if (block.fChecked)
+        return true;
+
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
     if (!CheckBlockHeader(block, state, fCheckPOW))
@@ -3044,6 +3091,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // because we receive the wrong transactions for it.
 
     // Size limits
+    uint64_t blockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
     if (block.vtx.empty()) // || block.vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return state.DoS(100, error("CheckBlock(): size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
@@ -3070,6 +3118,17 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     if (nSigOps > MAX_BLOCK_SIGOPS)
         return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
                          REJECT_INVALID, "bad-blk-sigops", true);
+
+    uint64_t nTx = 0;  // BU: count the number of transactions in case the CheckExcessive function wants to use this as criteria
+    BOOST_FOREACH(const CTransaction& tx, block.vtx)
+    {
+        nTx++;
+    }
+
+    if (fCheckPOW && fCheckMerkleRoot)
+        block.fChecked = true;
+
+    block.fExcessive = CheckExcessive(block, blockSize, nSigOps, nTx);  // BU: Check whether this block exceeds what we want to relay.
 
     return true;
 }

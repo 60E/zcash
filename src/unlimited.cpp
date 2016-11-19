@@ -63,6 +63,17 @@ int chainContainsExcessive(const CBlockIndex* blk, unsigned int goBack)
     return false;
 }
 
+bool CheckExcessive(const CBlock& block, uint64_t blockSize, uint64_t nSigOps, uint64_t nTx)
+{
+    if (blockSize > excessiveBlockSize) {
+        LogPrintf("Excessive block: ver:%x time:%d size: %" PRIu64 " Tx:%" PRIu64 " Sig:%d  :too many bytes\n", block.nVersion, block.nTime, blockSize, nTx, nSigOps);
+        return true;
+    }
+
+    LogPrintf("Acceptable block: ver:%x time:%d size: %" PRIu64 " Tx:%" PRIu64 " Sig:%d\n", block.nVersion, block.nTime, blockSize, nTx, nSigOps);
+    return false;
+}
+
 Value getexcessiveblock(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)

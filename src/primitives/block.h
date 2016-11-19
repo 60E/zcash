@@ -110,6 +110,9 @@ public:
 
     // memory only
     mutable std::vector<uint256> vMerkleTree;
+    // memory only
+    mutable bool fChecked;
+    mutable bool fExcessive;  // BU: is the block "excessive" (bigger than this node prefers to accept)
 
     CBlock()
     {
@@ -135,6 +138,8 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         vMerkleTree.clear();
+        fChecked = false;
+        fExcessive = false;
     }
 
     CBlockHeader GetBlockHeader() const
