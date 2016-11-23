@@ -39,13 +39,14 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
         strNetworkID = "main";
+        strCurrencyUnits = "ZEC";
         consensus.fCoinbaseMustBeProtected = true;
         consensus.nSubsidySlowStartInterval = 20000;
         consensus.nSubsidyHalvingInterval = 840000;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 4000;
-        consensus.powLimit = uint256S("03ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("0007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowAveragingWindow = 17;
         assert(maxUint/UintToArith256(consensus.powLimit) >= consensus.nPowAveragingWindow);
         consensus.nPowMaxAdjustDown = 32; // 32% adjustment down
@@ -53,14 +54,12 @@ public:
         consensus.nPowTargetSpacing = 2.5 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         /**
-         * The message start string is designed to be unlikely to occur in normal data.
-         * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
-         * a large 32-bit integer with any alignment.
+         * The message start string should be awesome! ⓩ❤
          */
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0x1b;
-        pchMessageStart[2] = 0xac;
-        pchMessageStart[3] = 0xab;
+        pchMessageStart[0] = 0x24;
+        pchMessageStart[1] = 0xe9;
+        pchMessageStart[2] = 0x27;
+        pchMessageStart[3] = 0x64;
         vAlertPubKey = ParseHex("04b7ecf0baa90495ceb4e4090f6b2fd37eec1e9c85fac68a487f3ce11589692e4a317479316ee814e066638e1db54e37a10689b70286e6315b1087b6615d179264");
         nDefaultPort = 8234;
         nMinerThreads = 0;
@@ -75,12 +74,15 @@ public:
          * Build the genesis block. Note that the output of its generation
          * transaction cannot be spent since it did not originally exist in the
          * database (and is in any case of zero value).
+         *
+         * >>> from pyblake2 import blake2s
+         * >>> 'Zcash' + blake2s(b'The Economist 2016-10-29 Known unknown: Another crypto-currency is born. BTC#436254 0000000000000000044f321997f336d2908cf8c8d6893e88dbf067e2d949487d ETH#2521903 483039a6b6bd8bd05f0584f9a078d075e454925eb71c1f13eaff59b405a721bb DJIA close on 27 Oct 2016: 18,169.68').hexdigest()
          */
         const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
         CMutableTransaction txNew;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
-        txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+        txNew.vin[0].scriptSig = CScript() << 520617983 << CScriptNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
         txNew.vout[0].nValue = 0;
         txNew.vout[0].scriptPubKey = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
         genesis.vtx.push_back(txNew);
@@ -102,13 +104,9 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        // TODO: set up bootstrapping for mainnet
-        //vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be")); // Pieter Wuille
-        //vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me")); // Matt Corallo
-        //vSeeds.push_back(CDNSSeedData("dashjr.org", "dnsseed.bitcoin.dashjr.org")); // Luke Dashjr
-        //vSeeds.push_back(CDNSSeedData("bitcoinstats.com", "seed.bitcoinstats.com")); // Christian Decker
-        //vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org")); // Jeff Garzik
-        //vSeeds.push_back(CDNSSeedData("bitcoin.jonasschnelli.ch", "seed.bitcoin.jonasschnelli.ch")); // Jonas Schnelli
+        vSeeds.push_back(CDNSSeedData("z.cash", "dnsseed.z.cash")); // Zcash
+        vSeeds.push_back(CDNSSeedData("str4d.xyz", "dnsseed.str4d.xyz")); // @str4d
+        vSeeds.push_back(CDNSSeedData("znodes.org", "dnsseed.znodes.org")); // @bitcartel
 
         // guarantees the first 2 characters, when base58 encoded, are "t1"
         base58Prefixes[PUBKEY_ADDRESS]     = {0x1C,0xB8};
@@ -135,28 +133,72 @@ public:
 
         checkpointData = (Checkpoints::CCheckpointData) {
             boost::assign::map_list_of
-            ( 0, consensus.hashGenesisBlock),
-            genesis.nTime, // * UNIX timestamp of last checkpoint block
-            0,   // * total number of transactions between genesis and last checkpoint
-                 //   (the tx=... number in the SetBestChain debug.log lines)
-            0    // * estimated number of transactions per day after checkpoint
+            (0, consensus.hashGenesisBlock)
+            (2500, uint256S("0x00000006dc968f600be11a86cbfbf7feb61c7577f45caced2e82b6d261d19744")),
+            1477973071, // * UNIX timestamp of last checkpoint block
+            22063, // * total number of transactions between genesis and last checkpoint
+                   //   (the tx=... number in the SetBestChain debug.log lines)
+            5083   // * estimated number of transactions per day after checkpoint
         };
 
         // Founders reward script expects a vector of 2-of-3 multisig addresses
         vFoundersRewardAddress = {
-            "t3QW3CN6TzmTVH8M5E5aJoKzN838zAEBCuS", "t3c6yYJxXBGr3A2KjATDwDsbn8iLP9AsXfk", "t3TuV45WwNVwo3Qc4o2Mr1TenrY9FwRM18Z", "t3hmq4gpfPGhbaRaCsmD2ePidaPxWf3upsg",
-            "t3Y8pxVmXa4URdCWLC4cmeGPQ9nu8eSJMvG", "t3aE5FYLigL7VZw6qjmM6ftjBiAvGiPkjo5", "t3eiUmJQGPykPH8U5gzbPd1SjGDK2k6SFvb", "t3N1ybrjKLyn7q7tpQSRxSZmYp7UgkEgHDb",
-            "t3c8uR6tn6KWwrPWApBXJQuQ6daAr8bcaMg", "t3PGLi4mkL5FkMNjp9ERHtTBQguHPjT3yqA", "t3NYWdEZKfKwvBGCtJM2oMWhy1Rzot3yL3Q", "t3N7PKyV2yQnciu9cx5UbaqDRCVtev9qHpN",
-            "t3YPB1besUqKeEtx9FZX1A6HcXnkXq9Vc3r", "t3UrKCimx2FA9LU4ZMHE5A9dWbxEzm5MgLj", "t3WF7VvMmEh5teWs3WnW6shMqMj3UbX6p33", "t3aBmkm1cZoF5dZuumscMjWviipvSx6hFLR",
-            "t3VMf2EpazVsr4mKy4Gyp9qizCdQLrWTm9J", "t3NtLU7S7fYCtLMCjJHkxGd8kr79w7UhtpX", "t3SwJTa8B4zCEX6fth9BMaejp3pQW11DTB8", "t3PCnGjULLqDUq91XNAwU7aAx6v2WkAP12v",
-            "t3MAXyTGySnb6b3No3LuoVuFL3fY7recEin", "t3hbK2KY4BQ1rQuzwufyxLzSKQQPiP9XidW", "t3aF3uT8jQSmVetYwP5qLAuTnNqWJRNLQu7", "t3PWLsr8ru9MXyq7YWGAHPcY3N9t3Zp45uo",
-            "t3WzEt94EcdNXWjL8sb2KFTawZPUcL42MoX", "t3cjgEXQH2dp4Gozu6Mn45LC5HGfjrSAf9V", "t3ZmskqAyBLXkYBMGfBBpVmR3sNKN79anu3", "t3hGLeywDDaiqBro2Mi2eLD1i8LUttrBfbT",
-            "t3eQdDzPZMdN4vCziFt5zar7qp1XyMwgnD6", "t3PXk3FyBi7q48paPDLtCKdzF1zDS4bpjM3", "t3W65DrnBYmU8DPJgQ44acpz3YPwoNE8pc5", "t3Tj5a6hNPksnpcRSXS2pv1f2mrPtL2bqGb",
-            "t3heu9Ty3XwHAJbux6Bm4MakzS8jUL3EkFD", "t3WFEk3WwAXF6ByHxfLohtz22J1TUwsL6iu", "t3gxDHAf8iW7xBFB7JsScngfJjH6h3QBfot", "t3bn1o8hx4jYjxgC8Pdt6Z6oeFrPQPtT8pC",
-            "t3XHGtWbALCLfY1jAtkUpVELPJMZpqxBtgE", "t3RUBEzMhjHpM2DQLsAmpAm9ZUHUxnEQAtM", "t3KdS1RGsiDXBKebyZvwVE2pfacNj28KLqB", "t3MmVaTutnXLqyD2F6EKnDtCKs38HxkVAdH",
-            "t3LesWouCkeWkwkaQUoGnD4k1pqmn3AYkt4", "t3PmV5vRVByLMTjR1W8ZCp2xy82kpb6n99u", "t3KX34whzndhhxPKJwAyETkeVA2Q1TzBhor", "t3SPSmxWnzNYr7WQooNxkHMhVYdAKY6M5Dr",
-            "t3KpcuJDA82TZhJoygng6eq72LWBCYtp7W8", "t3cHewjCnajURPGXA74kdLUkcqtRWpN3QkG", "t3a3zS49EqTFJWfDgNQhTNNFjkkhveqQssP", "t3eunPgNGpcSqEUSgAwip3Mm5nYQcPvacvX",
-        };
+            "t3Vz22vK5z2LcKEdg16Yv4FFneEL1zg9ojd", /* main-index: 0*/
+            "t3cL9AucCajm3HXDhb5jBnJK2vapVoXsop3", /* main-index: 1*/
+            "t3fqvkzrrNaMcamkQMwAyHRjfDdM2xQvDTR", /* main-index: 2*/
+            "t3TgZ9ZT2CTSK44AnUPi6qeNaHa2eC7pUyF", /* main-index: 3*/
+            "t3SpkcPQPfuRYHsP5vz3Pv86PgKo5m9KVmx", /* main-index: 4*/
+            "t3Xt4oQMRPagwbpQqkgAViQgtST4VoSWR6S", /* main-index: 5*/
+            "t3ayBkZ4w6kKXynwoHZFUSSgXRKtogTXNgb", /* main-index: 6*/
+            "t3adJBQuaa21u7NxbR8YMzp3km3TbSZ4MGB", /* main-index: 7*/
+            "t3K4aLYagSSBySdrfAGGeUd5H9z5Qvz88t2", /* main-index: 8*/
+            "t3RYnsc5nhEvKiva3ZPhfRSk7eyh1CrA6Rk", /* main-index: 9*/
+            "t3Ut4KUq2ZSMTPNE67pBU5LqYCi2q36KpXQ", /* main-index: 10*/
+            "t3ZnCNAvgu6CSyHm1vWtrx3aiN98dSAGpnD", /* main-index: 11*/
+            "t3fB9cB3eSYim64BS9xfwAHQUKLgQQroBDG", /* main-index: 12*/
+            "t3cwZfKNNj2vXMAHBQeewm6pXhKFdhk18kD", /* main-index: 13*/
+            "t3YcoujXfspWy7rbNUsGKxFEWZqNstGpeG4", /* main-index: 14*/
+            "t3bLvCLigc6rbNrUTS5NwkgyVrZcZumTRa4", /* main-index: 15*/
+            "t3VvHWa7r3oy67YtU4LZKGCWa2J6eGHvShi", /* main-index: 16*/
+            "t3eF9X6X2dSo7MCvTjfZEzwWrVzquxRLNeY", /* main-index: 17*/
+            "t3esCNwwmcyc8i9qQfyTbYhTqmYXZ9AwK3X", /* main-index: 18*/
+            "t3M4jN7hYE2e27yLsuQPPjuVek81WV3VbBj", /* main-index: 19*/
+            "t3gGWxdC67CYNoBbPjNvrrWLAWxPqZLxrVY", /* main-index: 20*/
+            "t3LTWeoxeWPbmdkUD3NWBquk4WkazhFBmvU", /* main-index: 21*/
+            "t3P5KKX97gXYFSaSjJPiruQEX84yF5z3Tjq", /* main-index: 22*/
+            "t3f3T3nCWsEpzmD35VK62JgQfFig74dV8C9", /* main-index: 23*/
+            "t3Rqonuzz7afkF7156ZA4vi4iimRSEn41hj", /* main-index: 24*/
+            "t3fJZ5jYsyxDtvNrWBeoMbvJaQCj4JJgbgX", /* main-index: 25*/
+            "t3Pnbg7XjP7FGPBUuz75H65aczphHgkpoJW", /* main-index: 26*/
+            "t3WeKQDxCijL5X7rwFem1MTL9ZwVJkUFhpF", /* main-index: 27*/
+            "t3Y9FNi26J7UtAUC4moaETLbMo8KS1Be6ME", /* main-index: 28*/
+            "t3aNRLLsL2y8xcjPheZZwFy3Pcv7CsTwBec", /* main-index: 29*/
+            "t3gQDEavk5VzAAHK8TrQu2BWDLxEiF1unBm", /* main-index: 30*/
+            "t3Rbykhx1TUFrgXrmBYrAJe2STxRKFL7G9r", /* main-index: 31*/
+            "t3aaW4aTdP7a8d1VTE1Bod2yhbeggHgMajR", /* main-index: 32*/
+            "t3YEiAa6uEjXwFL2v5ztU1fn3yKgzMQqNyo", /* main-index: 33*/
+            "t3g1yUUwt2PbmDvMDevTCPWUcbDatL2iQGP", /* main-index: 34*/
+            "t3dPWnep6YqGPuY1CecgbeZrY9iUwH8Yd4z", /* main-index: 35*/
+            "t3QRZXHDPh2hwU46iQs2776kRuuWfwFp4dV", /* main-index: 36*/
+            "t3enhACRxi1ZD7e8ePomVGKn7wp7N9fFJ3r", /* main-index: 37*/
+            "t3PkLgT71TnF112nSwBToXsD77yNbx2gJJY", /* main-index: 38*/
+            "t3LQtHUDoe7ZhhvddRv4vnaoNAhCr2f4oFN", /* main-index: 39*/
+            "t3fNcdBUbycvbCtsD2n9q3LuxG7jVPvFB8L", /* main-index: 40*/
+            "t3dKojUU2EMjs28nHV84TvkVEUDu1M1FaEx", /* main-index: 41*/
+            "t3aKH6NiWN1ofGd8c19rZiqgYpkJ3n679ME", /* main-index: 42*/
+            "t3MEXDF9Wsi63KwpPuQdD6by32Mw2bNTbEa", /* main-index: 43*/
+            "t3WDhPfik343yNmPTqtkZAoQZeqA83K7Y3f", /* main-index: 44*/
+            "t3PSn5TbMMAEw7Eu36DYctFezRzpX1hzf3M", /* main-index: 45*/
+            "t3R3Y5vnBLrEn8L6wFjPjBLnxSUQsKnmFpv", /* main-index: 46*/
+            "t3Pcm737EsVkGTbhsu2NekKtJeG92mvYyoN", /* main-index: 47*/
+//            "t3PZ9PPcLzgL57XRSG5ND4WNBC9UTFb8DXv", /* main-index: 48*/
+//            "t3L1WgcyQ95vtpSgjHfgANHyVYvffJZ9iGb", /* main-index: 49*/
+//            "t3JtoXqsv3FuS7SznYCd5pZJGU9di15mdd7", /* main-index: 50*/
+//            "t3hLJHrHs3ytDgExxr1mD8DYSrk1TowGV25", /* main-index: 51*/
+//            "t3fmYHU2DnVaQgPhDs6TMFVmyC3qbWEWgXN", /* main-index: 52*/
+//            "t3T4WmAp6nrLkJ24iPpGeCe1fSWTPv47ASG", /* main-index: 53*/
+//            "t3fP6GrDM4QVwdjFhmCxGNbe7jXXXSDQ5dv", /* main-index: 54*/
+};
         assert(vFoundersRewardAddress.size() <= consensus.GetLastFoundersRewardBlockHeight());
     }
 };
@@ -169,20 +211,20 @@ class CTestNetParams : public CMainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
+        strCurrencyUnits = "TAZ";
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
         consensus.nMajorityWindow = 400;
-        consensus.powLimit = uint256S("03ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.powLimit = uint256S("07ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         assert(maxUint/UintToArith256(consensus.powLimit) >= consensus.nPowAveragingWindow);
         consensus.fPowAllowMinDifficultyBlocks = true;
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0x9f;
-        pchMessageStart[2] = 0x24;
-        pchMessageStart[3] = 0xb6;
+        pchMessageStart[0] = 0xfa;
+        pchMessageStart[1] = 0x1a;
+        pchMessageStart[2] = 0xf9;
+        pchMessageStart[3] = 0xbf;
         vAlertPubKey = ParseHex("044e7a1553392325c871c5ace5d6ad73501c66f4c185d6b0453cf45dec5a1322e705c672ac1a27ef7cdaf588c10effdf50ed5f95f85f2f54a5f6159fca394ed0c6");
         nDefaultPort = 18234;
         nMinerThreads = 0;
-        nMaxTipAge = 0x7fffffff;
         nPruneAfterHeight = 1000;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
@@ -256,6 +298,7 @@ class CRegTestParams : public CTestNetParams {
 public:
     CRegTestParams() {
         strNetworkID = "regtest";
+        strCurrencyUnits = "REG";
         consensus.fCoinbaseMustBeProtected = false;
         consensus.nSubsidySlowStartInterval = 0;
         consensus.nSubsidyHalvingInterval = 150;
@@ -281,7 +324,7 @@ public:
         genesis.nBits = 0x200f0f0f;
 
         genesis.nNonce = uint256S("0x000000000000000000000000000000000000000000000000000000000000000f");
-        genesis.nSolution = ParseHex("0905111770fb9072e53075375f5d77c379e30bd25270f8778abdca2ee5156f5635b9b391");
+        genesis.nSolution = ParseHex("01936b7db1eb4ac39f151b8704642d0a8bda13ec547d54cd5e43ba142fc6d8877cab07b3");
         //genGenesisBlockSHA256(genesis, true);
         consensus.hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 18445;
