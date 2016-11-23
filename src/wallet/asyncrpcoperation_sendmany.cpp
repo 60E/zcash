@@ -196,18 +196,33 @@ bool AsyncRPCOperation_sendmany::main_impl() {
     CAmount sendAmount = z_outputs_total + t_outputs_total;
     CAmount targetAmount = sendAmount + minersFee;
 
+    assert(!isfromtaddr_ || z_inputs_total == 0);
+    assert(!isfromzaddr_ || t_inputs_total == 0);
+
     if (isfromtaddr_ && (t_inputs_total < targetAmount)) {
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strprintf("Insufficient transparent funds, have %ld, need %ld plus fee %ld", t_inputs_total, t_outputs_total, minersFee));
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS,
+            strprintf("Insufficient transparent funds, have %s, need %s",
+            FormatMoney(t_inputs_total), FormatMoney(targetAmount)));
     }
     
     if (isfromzaddr_ && (z_inputs_total < targetAmount)) {
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strprintf("Insufficient protected funds, have %ld, need %ld plus fee %ld", z_inputs_total, z_outputs_total, minersFee));
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS,
+            strprintf("Insufficient protected funds, have %s, need %s",
+            FormatMoney(z_inputs_total), FormatMoney(targetAmount)));
     }
 
     // If from address is a taddr, select UTXOs to spend
     CAmount selectedUTXOAmount = 0;
     bool selectedUTXOCoinbase = false;
     if (isfromtaddr_) {
+        // Get dust threshold
+        CKey secret;
+        secret.MakeNewKey(true);
+        CScript scriptPubKey = GetScriptForDestination(secret.GetPubKey().GetID());
+        CTxOut out(CAmount(1), scriptPubKey);
+        CAmount dustThreshold = out.GetDustThreshold(minRelayTxFee);
+        CAmount dustChange = -1;
+
         std::vector<SendManyInputUTXO> selectedTInputs;
         for (SendManyInputUTXO & t : t_inputs_) {
             bool b = std::get<3>(t);
@@ -217,9 +232,21 @@ bool AsyncRPCOperation_sendmany::main_impl() {
             selectedUTXOAmount += std::get<2>(t);
             selectedTInputs.push_back(t);
             if (selectedUTXOAmount >= targetAmount) {
-                break;
+                // Select another utxo if there is change less than the dust threshold.
+                dustChange = selectedUTXOAmount - targetAmount;
+                if (dustChange == 0 || dustChange >= dustThreshold) {
+                    break;
+                }
             }
         }
+
+        // If there is transparent change, is it valid or is it dust?
+        if (dustChange < dustThreshold && dustChange != 0) {
+            throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS,
+                strprintf("Insufficient transparent funds, have %s, need %s more to avoid creating invalid change output %s (dust threshold is %s)",
+                FormatMoney(t_inputs_total), FormatMoney(dustThreshold - dustChange), FormatMoney(dustChange), FormatMoney(dustThreshold)));
+        }
+
         t_inputs_ = selectedTInputs;
         t_inputs_total = selectedUTXOAmount;
 
@@ -301,8 +328,9 @@ bool AsyncRPCOperation_sendmany::main_impl() {
      *       -> zaddrs
      * 
      * Note: Consensus rule states that coinbase utxos can only be sent to a zaddr.
-     *       Any change over and above the amount specified by the user will be sent
-     *       to the same zaddr the user is sending funds to. 
+     *       Local wallet rule does not allow any change when sending coinbase utxos
+     *       since there is currently no way to specify a change address and we don't
+     *       want users accidentally sending excess funds to a recipient.
      */
     if (isfromtaddr_) {
         add_taddr_outputs_to_tx();
@@ -311,25 +339,15 @@ bool AsyncRPCOperation_sendmany::main_impl() {
         CAmount fundsSpent = t_outputs_total + minersFee + z_outputs_total;
         CAmount change = funds - fundsSpent;
         
-        // If there is a single zaddr and there are coinbase utxos, change goes to the zaddr.
         if (change > 0) {
-            if (isSingleZaddrOutput && selectedUTXOCoinbase) {
-                std::string address = std::get<0>(zOutputsDeque.front());   
-                SendManyRecipient smr(address, change, std::string());
-                zOutputsDeque.push_back(smr);
-
-                LogPrint("zrpc", "%s: change from coinbase utxo is also sent to the recipient (amount=%s)\n",
-                        getId().substr(0, 10),
-                        FormatMoney(change, false)
-                        );
-
-            } else if (!isSingleZaddrOutput && selectedUTXOCoinbase) {
-                // This should not happen and is not allowed
-                assert(false);
+            if (selectedUTXOCoinbase) {
+                assert(isSingleZaddrOutput);
+                throw JSONRPCError(RPC_WALLET_ERROR, strprintf(
+                    "Change %s not allowed. When protecting coinbase funds, the wallet does not "
+                    "allow any change as there is currently no way to specify a change address "
+                    "in z_sendmany.", FormatMoney(change)));
             } else {
-                // If there is a single zaddr and no coinbase utxos, just use a regular output for change.
                 add_taddr_change_output_to_tx(change);
-
                 LogPrint("zrpc", "%s: transparent change in transaction output (amount=%s)\n",
                         getId().substr(0, 10),
                         FormatMoney(change, false)
@@ -502,15 +520,23 @@ bool AsyncRPCOperation_sendmany::main_impl() {
                     throw JSONRPCError(RPC_WALLET_ERROR, "Could not find previous JoinSplit anchor");
                 }
                 
+                assert(changeOutputIndex != -1);
+                boost::optional<ZCIncrementalWitness> changeWitness;
+                int n = 0;
                 for (const uint256& commitment : prevJoinSplit.commitments) {
                     tree.append(commitment);
-                    previousCommitments.push_back(commitment);                   
+                    previousCommitments.push_back(commitment);
+                    if (!changeWitness && changeOutputIndex == n++) {
+                        changeWitness = tree.witness();
+                    } else if (changeWitness) {
+                        changeWitness.get().append(commitment);
+                    }
                 }
-                ZCIncrementalWitness changeWitness = tree.witness();
-                jsAnchor = changeWitness.root();
-                uint256 changeCommitment = prevJoinSplit.commitments[changeOutputIndex];
-                intermediates.insert(std::make_pair(tree.root(), tree));
-                witnesses.push_back(changeWitness);
+                if (changeWitness) {
+                        witnesses.push_back(changeWitness);
+                }
+                jsAnchor = tree.root();
+                intermediates.insert(std::make_pair(tree.root(), tree));    // chained js are interstitial (found in between block boundaries)
 
                 // Decrypt the change note's ciphertext to retrieve some data we need
                 ZCNoteDecryption decryptor(spendingkey_.viewing_key());
@@ -765,6 +791,11 @@ bool AsyncRPCOperation_sendmany::find_utxos(bool fAcceptCoinbase=false) {
         SendManyInputUTXO utxo(out.tx->GetHash(), out.i, nValue, isCoinbase);
         t_inputs_.push_back(utxo);
     }
+
+    // sort in ascending order, so smaller utxos appear first
+    std::sort(t_inputs_.begin(), t_inputs_.end(), [](SendManyInputUTXO i, SendManyInputUTXO j) -> bool {
+        return ( std::get<2>(i) < std::get<2>(j));
+    });
 
     return t_inputs_.size() > 0;
 }

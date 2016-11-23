@@ -207,6 +207,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
                 dPriority += (double)nValueIn * nConf;
             }
+            nTotalIn += tx.GetJoinSplitValueIn();
+
             if (fMissingInputs) continue;
 
             // Priority is sum(valuein * age) / modified_txsize
@@ -453,7 +455,7 @@ static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& rese
     if (!ProcessNewBlock(state, NULL, pblock, true, NULL))
         return error("ZcashMiner: ProcessNewBlock, block not accepted");
 
-    minedBlocks.increment();
+    TrackMinedBlock(pblock->GetHash());
 
     return true;
 }
@@ -760,11 +762,13 @@ void static BitcoinAuxMiner(CWallet *pwallet)
     }
     catch (const boost::thread_interrupted&)
     {
+        c.disconnect();
         LogPrintf("ZcashMiner terminated\n");
         throw;
     }
     catch (const std::runtime_error &e)
     {
+        c.disconnect();
         LogPrintf("ZcashMiner runtime error: %s\n", e.what());
         return;
     }

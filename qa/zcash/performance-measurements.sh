@@ -15,7 +15,7 @@ function hcashd_generate {
 function hcashd_start {
     rm -rf "$DATADIR"
     mkdir -p "$DATADIR"
-    ./src/hcashd -regtest -datadir="$DATADIR" -rpcuser=user -rpcpassword=password -rpcport=5983 &
+    ./src/hcashd -regtest -datadir="$DATADIR" -rpcuser=user -rpcpassword=password -rpcport=5983 -showmetrics=0 &
     ZCASHD_PID=$!
 }
 
@@ -28,7 +28,7 @@ function hcashd_massif_start {
     rm -rf "$DATADIR"
     mkdir -p "$DATADIR"
     rm -f massif.out
-    valgrind --tool=massif --time-unit=ms --massif-out-file=massif.out ./src/hcashd -regtest -datadir="$DATADIR" -rpcuser=user -rpcpassword=password -rpcport=5983 &
+    valgrind --tool=massif --time-unit=ms --massif-out-file=massif.out ./src/hcashd -regtest -datadir="$DATADIR" -rpcuser=user -rpcpassword=password -rpcport=5983 -showmetrics=0 &
     ZCASHD_PID=$!
 }
 
@@ -42,7 +42,7 @@ function hcashd_valgrind_start {
     rm -rf "$DATADIR"
     mkdir -p "$DATADIR"
     rm -f valgrind.out
-    valgrind --leak-check=yes -v --error-limit=no --log-file="valgrind.out" ./src/hcashd -regtest -datadir="$DATADIR" -rpcuser=user -rpcpassword=password -rpcport=5983 &
+    valgrind --leak-check=yes -v --error-limit=no --log-file="valgrind.out" ./src/hcashd -regtest -datadir="$DATADIR" -rpcuser=user -rpcpassword=password -rpcport=5983 -showmetrics=0 &
     ZCASHD_PID=$!
 }
 
