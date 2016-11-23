@@ -33,7 +33,7 @@ using namespace std;
 
 const arith_uint256 maxUint = UintToArith256(uint256S("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
 
-bool genGenesisBlockSHA256(CBlock &block, bool fTestNet);
+bool genGenesisBlockSHA256(CBlock &block, uint256 limit);
 
 class CMainParams : public CChainParams {
 public:
@@ -91,16 +91,14 @@ public:
 
         genesis.nVersion = 4;
         genesis.nTime    = 1231006505;
-        genesis.nBits    = 0x2003ffff;
-        genesis.nNonce   = uint256S("0x0000000000000000000000000000000000000000000000000000000000000013");
+        genesis.nBits    = 0x1f07ffff;
+        genesis.nNonce   = uint256S("0x0000000000000000000000000000000000000000000000000000000000001ea7");
         genesis.nSolution = ParseHex("0025991209a4a7952e06c65febfd76424b11df202714b3e2083c8598a9083f098459638b2b0d269efcbf0d72d9fdccc92045835652ac372d51d0e23dea6ea31a7625d3c686a5f549aae270912751397f10bfcc89066e50df029f2fe9c72f41dfafc41beca6e9a9c21f2f903f234460610f1c01c54802b8f4edb5611263ae57a50307db731787a281d65046ea7619bc86b515e361e0d4d6e427970b72880952d9d2ab12783498cd5f00b895ab47cecdad71afb53db474875a6c409a863140b73d39d25bb034fa1ce7d4084cba721953de7de0141a1342cbcc28933d52d22624c725ed4a53b0920e29b93a9314e317abe1e1da0af153d8cf05579c2226021a21012872a903d9a5a2e15fade995d2bcdda25c1795cdfc021cf107b3aaf3652b5073de526356de1d09781c6027ec77c9a5f249b98dfd23fb038178aaf229558a30e94e32d9162d073e12ed988e1f1718bb7d00ce6e6b1b2ec8d97719d52e655781cd8279b9644109252b20210f0037696ed1b878cbc8f6b4db95dd1d01c6c53ec18fb4d38526c45a8bd163da81a6df360534b62267ac35a053c7abb5b40ee5a12e2fad1b61940e7269dcf95b12d7eabda16e16c1d5c5e5c015e19723f189a4e5a52161e4c842f4d869028143474fbb5110ee1cf0acf3ad1fecd8e2d58768633b55cb1ab8c518e5a4954ac66fdaffcd93d1f6ab0af4fc885ef15908b1c65a80d31475b868b57c8239676ea288bceae4190781906ecb5dd0fdc3959f0fbe64ea5f3f1f8c030ceafd4feb4c232fd3d4a19711d359051c62ebdb2b2ebc361a34323a25edbe9705f46571c60cfdf327c618a5529a6aea5185578ce1d62543a52141de8e52b819da2ca3dbc89d62db077200df2ceb3160664ff18e1b1cdbbb9cd1e368a3bed50db432202eb204dd186920bfce44c74eaaec7afe4284eab4ce78ef5b78cb9a009092f24ec999f3d7ae71e4dfe559323e5f76d99d3ebf4a663395b39f9657bd831afdab3f9f109ff2f003fe44734054a3c7915dd4a7de4dac7dcfc0f003532a913d2925e0edfd32b043284f66d93911ddd7e591031771fb4bc5d7a058fc519ee7a1a8f87d3a9fea42181da2335e37ddbde6c235425971f81a00743e9c210ffcff2875e8a191d8d2d381efabf801d7887dca33189bce10fb919b214f94a3047eb503d503a61fc76d086d5f1c1d88a663ecbae576f66d6ba1867a3ae1bd28f37c3744e5e72fe022a8eb4349b63edbbddae9291665470af215f63d506b12354a5ff0a332543a8bdf4d3aff12555aa237957939c2be676c4b11233948851823dda4d2d7c421af7241ae8dabf5ce25befb11e62c96c5c13e512bb91cae854e70b3c8fdfc727f117444bafeb9b4dbf637a297b63227cafa7e611c3bd3be507d6e756d6da7116d5eb761f76e0ec62f6a32c8d30176ac03960cd7790d6b218e89a215b86440c88dd40870b853040d8d2510ef918551b86e312f230c475702ee274271d9f9c4f0f880a5c43a9572a1b61dcd290e0d1231c3ea76f5f718a3481674297cd3eaceda2a05868bc0690201d506c8d25137a266daa5d216f7f2067e62db9ba8f841788611cbe5af6bc9532df1fb7b22e3be8e4713f23de2f692b271ffdcf4f43e0838942c9716ae8ea75f97d47ae405967977f6ebdcbc33e408163d8c504e1a6a7828940e44d66b816113fbeb5b24d1f42bd9e0c33523c5d4720fdea6c9a3d634029b1126e96b9945a2ec4c3b98c08b78e262daaad9ceda2e31e99c04507d557cc2077fda6f8cefb0a7df121a17778ea7a336ff17c3132627675d69d69b17da698b2c5756585a731f17c2f97332981efa598c66cfd1f93b61075427e578f57906946ce25a8f1a56c9fffa673fded26154990b27a8a7162e86e427cb50743bb4e8");
-        //genGenesisBlockSHA256(genesis, false);
+        //genGenesisBlockSHA256(genesis, consensus.powLimit);
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x02fb5a77024136ece3f36ffeb8b29ee9ba8b52d1b463873a630f18a1359f4393"));
-        assert(genesis.hashMerkleRoot == uint256S("0xdc6c10ad2a26613ae9b8a156ed9ca15e3e355a994a7e32cd7a4c3d7a478f57d2"));
-        //assert(consensus.hashGenesisBlock == uint256S("0x00982212b34e545f873e3ce30b0babab7d2acdedc52867b2bee24a182538633f"));
-        //assert(genesis.hashMerkleRoot == uint256S("0xdc6c10ad2a26613ae9b8a156ed9ca15e3e355a994a7e32cd7a4c3d7a478f57d2"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000076b5b0ff3fc1a28364662e826997255b0c03a0b8d62ad4f8a503af4a2a31"));
+        assert(genesis.hashMerkleRoot == uint256S("0x3067d0a43d28f1f6ccce2fbd1901d3c88a9fba1b33de52f6658af25071cb6cfd"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -230,11 +228,11 @@ public:
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1296688602;
         genesis.nBits = 0x2003ffff;
-        genesis.nNonce = uint256S("0x000000000000000000000000000000000000000000000000000000000000001f");
+        genesis.nNonce = uint256S("0x00000000000000000000000000000000000000000000000000000000000000fc");
         genesis.nSolution = ParseHex("00206211d02ae0a9f111f32b83725bca34081ff8640a5782bc4e8d60e306a7128f5d48d37e93851c61fc103065cd85a59943a364e38f1dc1b14242af5b21831864c6938faae7d5f1ef23124f514b592fd63ebde70f771709d587887080aec110a1740594bb747fb9ef143722a94b13394bf8a7a256bb471371aa440fd7ed107c058413639c89268353bb609f97b2c7365def1d2a0316b6f89dd317a4312a07a67e59ab04647fcf00015a0d40a5c78a9cc60b22be495713addb8c945adf2830fda88b517900fafa9976917edd7ea673fb12340279b7733d06eb284a48b0b39f8dda397f4779df2934a4a1cc7095f854e9ae74890f39ff3d9cd4745e4a0269ad941f6f195bbdcb929023364c3a2ce33af6715a218b1282a28e2f8c28075525dba772e4e95d63f5093ffbd1b499b0233427b1e21eabcce4c7b65b1f570b564497e9d7c88b0f4d21b09b2e78e74dd99bf2d902b08a50f1dc718bdb7893bee8c490127abb3a91d944145ab08e19e4259470365d8460135643aa5bf4020f566250782b11fba024b2332c596aed96680ef49d444a870eae5ea3218bc5b65a9e481dd70f3eff81c80b56be8aaa109fb555aef367961ef58338cfff8e5f13efc65daf246fc5ab45016b2cdc761932953b46f31c39d2b292971f77bbfe8461d13598876b6bbeef552495b9529a91956b3262741f6b250c4a3247fb656b07c64349c1cdcea7dddf24f28fb97ec69e76d6779125673e0110db2a61af8f72ca9a4114d93e1eee80831f87eecf001de2fb33c716e7ac68281e897ad6d4b737da42c080d4717eb17ee7eb2ae2e3762c11bebde107f84b79e596b6b97237e576a4b95a3f1758bef2ba0cfbb44da9f4b641ddbaa38aa56d88521aca5b8d382749b25b16cc5979c95b82e0115e0cca1fb3726ae637eddb2d3b14616fbff816afa25cba12a9231fedc300a2bff8e446c68752055209a16cf2d16af5363ebb4411a43c0191cffb2f42a8cb4f6b4b1a96cc190f02025719eaf449dc7ac83aa1e8829cdc909efe6922dd065109e407db885f6923833ce1e74a3511a6da28a20f43eba46a21594de3248a9b726bc5eebe76fb592f1955c6bde7cdb04b1d7666824cee2906d9f757a5a716f54a42f6a3fd59b36e92b44dcd5b325295b5cfbd227ba3f03c4a1765df12827484c2b1b8a02586d8c2048bf651e2d474450f96a5bb7c3ac0760392d8c324112e0b90cf652779b116856e0e71a3e33ed47ef2f41cd445781047e86da04a41df294ba208d76a15827e1cebd3329763ff45a9f512dfc43ada1db7bc1b357f120645cfa68f47992c128786526459466c08b3f54e5a3fdcebcf33b981f5b5d88f32df9e1e444bf970c320356f7f8511ae0b6502f519b3d8c41eea4a3a7ca2a0096df56fb5fa09d774ea3524dd9376b2c4f837e300c3411b07238e532d0f93ad16defd9a42737c814704544ab5742fdd21c84bf3f3f4e76201ba6691f639088f10fa409d91351a338672f9f279dad2701efa253807ba27296d851fb007b38476a9d8f242903ee620092a61d3d34357b5249c84453e370c89f53d33d9800dd0834f3d58943d4f12855077e3e3755eb3b38df73f68ae258616ddc9d385a80d09f9a9a21a42126e7b437a4aacfed26cf53c8d480f0e4b6f3b16f3df322303198649ef4d4f8d779a61c705edb7b17d1fdefab118f60e48ce62376d963ad69af5c1ad225c003f55201132b1a2e15e248cf947019a64d2767d99adafa2b71cc1a70698d2b5dd14f8c548e7ebe0be9c82f9435f06c95cd912abae35dae3935e92486eeb25539d733239773d7a55e07aa5ed29781bd246a48ac961bc1bf907f3f2a516d353ed0cc0b1fe3ede9dea60077ba1745272ecd0ade27581e362a684175071d2e8f39af430");
-        //genGenesisBlockSHA256(genesis, true);
+        //genGenesisBlockSHA256(genesis, consensus.powLimit);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x02770d9a2ae08168c3fe8b8633318ce8e13a4e6ea588eb4ba8eb61a065affca7"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0181ccb685eb8b1129e84f58a3c07aedc1227f460b75e4b21d454879e2b773cd"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -305,7 +303,7 @@ public:
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;
-        consensus.powLimit = uint256S("0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f");
+        consensus.powLimit = uint256S("07ff0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f");
         assert(maxUint/UintToArith256(consensus.powLimit) >= consensus.nPowAveragingWindow);
         consensus.nPowMaxAdjustDown = 0; // Turn off adjustment down
         consensus.nPowMaxAdjustUp = 0; // Turn off adjustment up
@@ -323,12 +321,12 @@ public:
         genesis.nTime += 10;
         genesis.nBits = 0x200f0f0f;
 
-        genesis.nNonce = uint256S("0x000000000000000000000000000000000000000000000000000000000000000f");
+        genesis.nNonce = uint256S("0x0000000000000000000000000000000000000000000000000000000000000048");
         genesis.nSolution = ParseHex("01936b7db1eb4ac39f151b8704642d0a8bda13ec547d54cd5e43ba142fc6d8877cab07b3");
-        //genGenesisBlockSHA256(genesis, true);
+        //genGenesisBlockSHA256(genesis, consensus.powLimit);
         consensus.hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 18445;
-        assert(consensus.hashGenesisBlock == uint256S("0x0a43273b130243f226156734eee72cf22f91da1944beff22d4d5aa12e54d4985"));
+        assert(consensus.hashGenesisBlock == uint256S("0x068c628eff5cc48ea189b158a3198d295b9c2d6ccb953fefedae89dd38f456f6"));
 
         nPruneAfterHeight = 1000;
 
@@ -437,7 +435,7 @@ std::string CChainParams::GetFoundersRewardAddressAtIndex(int i) const {
     return vFoundersRewardAddress[i];
 }
 
-bool genGenesisBlockSHA256(CBlock &block, bool fTestNet) {
+bool genGenesisBlockSHA256(CBlock &block, uint256 limit) {
     printf("genGenesisBlock\n");
 #if 0
     const char* pszTimestamp = "B1C4E1EA1B3C05944851D026DC5985EC7EB807547334E5E944AA3D4E8191D486";
@@ -472,7 +470,7 @@ bool genGenesisBlockSHA256(CBlock &block, bool fTestNet) {
 
 //        uint256 hashTarget = ArithToUint256(arith_uint256().SetCompact(block.nBits));
 
-    arith_uint256 hashMin = UintToArith256(uint256S("0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f"));
+    arith_uint256 hashMin = UintToArith256(limit);
     arith_uint256 hashTarget = arith_uint256().SetCompact(block.nBits);
     printf("0x%s\n", ArithToUint256(hashTarget).ToString().c_str());
     if (hashTarget > hashMin)
