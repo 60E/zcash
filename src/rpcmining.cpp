@@ -119,8 +119,6 @@ Value getgenerate(const Array& params, bool fHelp)
 
 Value generate(const Array& params, bool fHelp)
 {
-	throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method disabled");
-#if 0
     if (fHelp || params.size() < 1 || params.size() > 1)
         throw runtime_error(
             "generate numblocks\n"
@@ -213,7 +211,6 @@ endloop:
         blockHashes.push_back(pblock->GetHash().GetHex());
     }
     return blockHashes;
-#endif
 }
 
 

@@ -9,7 +9,6 @@ export BITCOINCLI=${BUILDDIR}/qa/pull-tester/run-bitcoin-cli
 export BITCOIND=${REAL_BITCOIND}
 
 #Run the tests
-
 testScripts=(
     'wallet_protectcoinbase.py'
     'wallet.py'
@@ -32,6 +31,7 @@ testScripts=(
     'zcjoinsplit.py'
     'zcjoinsplitdoublespend.py'
     'getblocktemplate.py'
+    'excessive.py'
 );
 testScriptsExt=(
     'bipdersig-p2p.py'
