@@ -33,6 +33,10 @@
 using namespace json_spirit;
 using namespace std;
 
+const uint32_t BIP_009_MASK = 0x20000000;
+const uint32_t BASE_VERSION = 0x20000000;
+const uint32_t FORK_BIT_2MB = 0x10000000;  // Vote for 2MB fork
+
 uint64_t maxGeneratedBlock = DEFAULT_MAX_GENERATED_BLOCK_SIZE;
 unsigned int excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE;
 unsigned int excessiveAcceptDepth = DEFAULT_EXCESSIVE_ACCEPT_DEPTH;
@@ -72,6 +76,22 @@ bool CheckExcessive(const CBlock& block, uint64_t blockSize, uint64_t nSigOps, u
 
     LogPrintf("Acceptable block: ver:%x time:%d size: %" PRIu64 " Tx:%" PRIu64 " Sig:%d\n", block.nVersion, block.nTime, blockSize, nTx, nSigOps);
     return false;
+}
+
+int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params,uint32_t nTime)
+{
+    if (blockVersion != 0)  // BU: allow override of block version
+    {
+        return blockVersion;
+    }
+
+    int32_t nVersion = CBlockHeader::CURRENT_VERSION;
+
+    // turn BIP109 off by default by commenting this out:
+    // if (nTime <= params.SizeForkExpiration())
+    //	  nVersion |= FORK_BIT_2MB;
+
+    return nVersion;
 }
 
 Value getexcessiveblock(const Array& params, bool fHelp)
@@ -132,5 +152,144 @@ Value setexcessiveblock(const Array& params, bool fHelp)
     //settingsToUserAgentString();
     std::ostringstream ret;
     ret << "Excessive Block set to " << excessiveBlockSize << " bytes.  Accept Depth set to " << excessiveAcceptDepth << " blocks.";
+    return ret.str();
+}
+
+Value getminingmaxblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+                "getminingmaxblock\n"
+                        "\nReturn the max generated (mined) block size"
+                        "\nResult\n"
+                        "      (integer) maximum generated block size in bytes\n"
+                        "\nExamples:\n" +
+                HelpExampleCli("getminingmaxblock", "") + HelpExampleRpc("getminingmaxblock", ""));
+
+    return maxGeneratedBlock;
+}
+
+
+Value setminingmaxblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+                "setminingmaxblock blocksize\n"
+                        "\nSet the maximum number of bytes to include in a generated (mined) block.  This command does not turn generation on/off.\n"
+                        "\nArguments:\n"
+                        "1. blocksize         (integer, required) the maximum number of bytes to include in a block.\n"
+                        "\nExamples:\n"
+                        "\nSet the generated block size limit to 8 MB\n" +
+                HelpExampleCli("setminingmaxblock", "8000000") +
+                "\nCheck the setting\n" + HelpExampleCli("getminingmaxblock", ""));
+
+    uint64_t arg = 0;
+    if (params[0].is_uint64())
+        arg = params[0].get_int64();
+    else {
+        string temp = params[0].get_str();
+        if (temp[0] == '-') boost::throw_exception( boost::bad_lexical_cast() );
+        arg = boost::lexical_cast<uint64_t>(temp);
+    }
+
+    // I don't want to waste time testing edge conditions where no txns can fit in a block, so limit the minimum block size
+    if (arg < 1000)
+        throw runtime_error("max generated block size must be greater than 1KB");
+
+    maxGeneratedBlock = arg;
+
+    std::ostringstream ret;
+    ret << "MaxGeneratedBlock set to " << maxGeneratedBlock << " bytes. ";
+    return ret.str();
+}
+
+Value getblockversion(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+                "getblockversion\n"
+                        "\nReturn the block version used when mining."
+                        "\nResult\n"
+                        "      (integer) block version number\n"
+                        "\nExamples:\n" +
+                HelpExampleCli("getblockversion", "") + HelpExampleRpc("getblockversion", ""));
+    const CBlockIndex* pindex = chainActive.Tip();
+    return UnlimitedComputeBlockVersion(pindex, Params().GetConsensus(),pindex->nTime);
+}
+
+Value setblockversion(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+                "setblockversion blockVersionNumber\n"
+                        "\nSet the block version number.\n"
+                        "\nArguments:\n"
+                        "1. blockVersionNumber         (integer, hex integer, 'BIP109', 'BASE' or 'default'.  Required) The block version number.\n"
+                        "\nExamples:\n"
+                        "\nVote for 2MB blocks\n" +
+                HelpExampleCli("setblockversion", "BIP109") +
+                "\nCheck the setting\n" + HelpExampleCli("getblockversion", ""));
+
+    uint32_t arg = 0;
+
+    string temp = params[0].get_str();
+    if (temp == "default")
+    {
+        arg = 0;
+    }
+    else if (temp == "BIP109")
+    {
+        arg = BASE_VERSION | FORK_BIT_2MB;
+    }
+    else if (temp == "BASE")
+    {
+        arg = BASE_VERSION;
+    }
+    else if ((temp[0] == '0') && (temp[1] == 'x'))
+    {
+        std::stringstream ss;
+        ss << std::hex << (temp.c_str()+2);
+        ss >> arg;
+    }
+    else
+    {
+        arg = boost::lexical_cast<unsigned int>(temp);
+    }
+
+    blockVersion = arg;
+
+    std::ostringstream ret;
+    ret << "blockVersion set to " << blockVersion;
+    return ret.str();
+}
+
+extern Value getminercomment(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+                "getminercomment\n"
+                        "\nReturn the comment that will be put into each mined block's coinbase\n transaction after the hcash parameters."
+                        "\nResult\n"
+                        "  minerComment (string) miner comment\n"
+                        "\nExamples:\n" +
+                HelpExampleCli("getminercomment", "") + HelpExampleRpc("getminercomment", ""));
+
+    std::ostringstream ret;
+    ret << "Method disabled";
+    return ret.str();
+}
+
+extern Value setminercomment(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+                "setminercomment\n"
+                        "\nSet the comment that will be put into each mined block's coinbase\n transaction after the hcash parameters.\n Comments that are too long will be truncated."
+                        "\nExamples:\n" +
+                HelpExampleCli("setminercomment", "\"hcash is fundamentally emergent consensus\"") + HelpExampleRpc("setminercomment", "\"hcash is fundamentally emergent consensus\""));
+
+    //minerComment = params[0].getValStr();
+    std::ostringstream ret;
+    ret << "Method disabled";
     return ret.str();
 }

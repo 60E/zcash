@@ -107,6 +107,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    pblock->nVersion = UnlimitedComputeBlockVersion(pindexPrev, chainparams.GetConsensus(),pblock->nTime);
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
     if (Params().MineBlocksOnDemand())

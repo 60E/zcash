@@ -14,7 +14,7 @@
 #include "json/json_spirit_value.h"
 
 enum {
-    DEFAULT_MAX_GENERATED_BLOCK_SIZE = 1000000,
+    DEFAULT_MAX_GENERATED_BLOCK_SIZE = 2000000,
     DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 4,
     DEFAULT_EXCESSIVE_BLOCK_SIZE = 16000000,
     DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER = 10,
@@ -32,8 +32,21 @@ extern void UnlimitedSetup(void);
 extern json_spirit::Value getexcessiveblock(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value setexcessiveblock(const json_spirit::Array& params, bool fHelp);
 
+extern json_spirit::Value getminingmaxblock(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value setminingmaxblock(const json_spirit::Array& params, bool fHelp);
+
+// Get and set the custom string that miners can place into the coinbase transaction
+extern json_spirit::Value getminercomment(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value setminercomment(const json_spirit::Array& params, bool fHelp);
+
+// Get and set the generated (mined) block version.  USE CAREFULLY!
+extern json_spirit::Value getblockversion(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value setblockversion(const json_spirit::Array& params, bool fHelp);
+
 extern int chainContainsExcessive(const CBlockIndex* blk, unsigned int goBack = 0);
 extern bool CheckExcessive(const CBlock& block, uint64_t blockSize, uint64_t nSigOps, uint64_t nTx);
+
+extern int32_t UnlimitedComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params,uint32_t nTime);
 
 #endif
 
