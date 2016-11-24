@@ -124,14 +124,7 @@ Value setexcessiveblock(const Array& params, bool fHelp)
                         "\nExamples:\n" +
                 HelpExampleCli("getexcessiveblock", "") + HelpExampleRpc("getexcessiveblock", ""));
 
-    unsigned int ebs=0;
-    if (params[0].is_uint64())
-        ebs = params[0].get_int64();
-    else {
-        string temp = params[0].get_str();
-        if (temp[0] == '-') boost::throw_exception( boost::bad_lexical_cast() );
-        ebs = boost::lexical_cast<unsigned int>(temp);
-    }
+    unsigned int ebs = params[0].get_int();
 
     if (ebs < maxGeneratedBlock)
     {
@@ -141,13 +134,7 @@ Value setexcessiveblock(const Array& params, bool fHelp)
     }
     excessiveBlockSize = ebs;
 
-    if (params[1].is_uint64())
-        excessiveAcceptDepth = params[1].get_int64();
-    else {
-        string temp = params[1].get_str();
-        if (temp[0] == '-') boost::throw_exception( boost::bad_lexical_cast() );
-        excessiveAcceptDepth = boost::lexical_cast<unsigned int>(temp);
-    }
+    excessiveAcceptDepth = params[1].get_int64();
 
     //settingsToUserAgentString();
     std::ostringstream ret;
@@ -183,14 +170,7 @@ Value setminingmaxblock(const Array& params, bool fHelp)
                 HelpExampleCli("setminingmaxblock", "8000000") +
                 "\nCheck the setting\n" + HelpExampleCli("getminingmaxblock", ""));
 
-    uint64_t arg = 0;
-    if (params[0].is_uint64())
-        arg = params[0].get_int64();
-    else {
-        string temp = params[0].get_str();
-        if (temp[0] == '-') boost::throw_exception( boost::bad_lexical_cast() );
-        arg = boost::lexical_cast<uint64_t>(temp);
-    }
+    uint64_t arg = params[0].get_uint64();
 
     // I don't want to waste time testing edge conditions where no txns can fit in a block, so limit the minimum block size
     if (arg < 1000)
