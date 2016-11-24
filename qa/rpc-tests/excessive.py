@@ -21,20 +21,17 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 
     def setup_network(self, split=False):
         self.nodes = start_nodes(4, self.options.tmpdir)
-        connect_nodes_bi(self.nodes,0,1)
-        connect_nodes_bi(self.nodes,0,2)
-        connect_nodes_bi(self.nodes,0,3)
-        connect_nodes_bi(self.nodes,1,2)
-        connect_nodes_bi(self.nodes,1,3)
-        connect_nodes_bi(self.nodes,2,3)
-        self.is_network_split = False
+        #connect_nodes_bi(self.nodes,0,1)
+        #connect_nodes_bi(self.nodes,0,2)
+        #connect_nodes_bi(self.nodes,0,3)
+        #connect_nodes_bi(self.nodes,1,2)
+        #connect_nodes_bi(self.nodes,1,3)
+        #connect_nodes_bi(self.nodes,2,3)
+        self.is_network_split = True
         self.sync_all()
 
     def run_test (self):
-        for n in self.nodes:
-            n.generate(1)
-            self.sync_all()
-        self.nodes[0].generate(100)
+        self.nodes[0].generate(200)
         self.sync_all()
         
  	# Set the accept depth at 1, 2, and 3 and watch each nodes resist the chain for that long
@@ -52,7 +49,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
         self.nodes[0].generate(1)
         time.sleep(2) #give blocks a chance to fully propagate
         counts = [ x.getblockcount() for x in self.nodes ]
-        assert_equal(counts, [101,100,100,100])  
+        assert_equal(counts, [201,200,200,200])
 
         self.nodes[0].generate(1)
         time.sleep(2) #give blocks a chance to fully propagate
