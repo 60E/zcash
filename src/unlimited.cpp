@@ -198,9 +198,9 @@ Value setminingmaxblock(const Array& params, bool fHelp)
 
     maxGeneratedBlock = arg;
 
-    std::ostringstream ret;
-    ret << "MaxGeneratedBlock set to " << maxGeneratedBlock << " bytes. ";
-    return ret.str();
+    Object ret;
+    ret.push_back(Pair("maxGeneratedBlock", (uint64_t)maxGeneratedBlock));
+    return ret;
 }
 
 Value getblockversion(const Array& params, bool fHelp)
