@@ -65,7 +65,7 @@ class RESTTest (BitcoinTestFramework):
         self.nodes[2].generate(100)
         self.sync_all()
 
-        assert_equal(self.nodes[0].getbalance(), 10)
+        assert_equal(self.nodes[0].getbalance(), 50)
 
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()
@@ -224,9 +224,9 @@ class RESTTest (BitcoinTestFramework):
         # compare with block header
         response_header = http_get_call(url.hostname, url.port, '/rest/headers/1/'+bb_hash+self.FORMAT_SEPARATOR+"bin", "", True)
         assert_equal(response_header.status, 200)
-        assert_equal(int(response_header.getheader('content-length')), 177)
+        assert_equal(int(response_header.getheader('content-length')), 145)
         response_header_str = response_header.read()
-        assert_equal(response_str[0:177], response_header_str)
+        assert_equal(response_str[0:145], response_header_str)
 
         # check block hex format
         response_hex = http_get_call(url.hostname, url.port, '/rest/block/'+bb_hash+self.FORMAT_SEPARATOR+"hex", "", True)
@@ -238,10 +238,10 @@ class RESTTest (BitcoinTestFramework):
         # compare with hex block header
         response_header_hex = http_get_call(url.hostname, url.port, '/rest/headers/1/'+bb_hash+self.FORMAT_SEPARATOR+"hex", "", True)
         assert_equal(response_header_hex.status, 200)
-        assert_greater_than(int(response_header_hex.getheader('content-length')), 354)
+        assert_greater_than(int(response_header_hex.getheader('content-length')), 290)
         response_header_hex_str = response_header_hex.read()
-        assert_equal(response_hex_str[0:354], response_header_hex_str[0:354])
-        assert_equal(response_header_str.encode("hex")[0:354], response_header_hex_str[0:354])
+        assert_equal(response_hex_str[0:290], response_header_hex_str[0:290])
+        assert_equal(response_header_str.encode("hex")[0:290], response_header_hex_str[0:290])
 
         # check json format
         json_string = http_get_call(url.hostname, url.port, '/rest/block/'+bb_hash+self.FORMAT_SEPARATOR+'json')
