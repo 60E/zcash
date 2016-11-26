@@ -21,13 +21,10 @@ class ExcessiveBlockTest (BitcoinTestFramework):
 
     def setup_network(self, split=False):
         self.nodes = start_nodes(4, self.options.tmpdir)
-        #connect_nodes_bi(self.nodes,0,1)
-        #connect_nodes_bi(self.nodes,0,2)
-        #connect_nodes_bi(self.nodes,0,3)
-        #connect_nodes_bi(self.nodes,1,2)
-        #connect_nodes_bi(self.nodes,1,3)
-        #connect_nodes_bi(self.nodes,2,3)
-        self.is_network_split = True
+        connect_nodes_bi(self.nodes,0,1)
+        connect_nodes_bi(self.nodes,1,2)
+        connect_nodes_bi(self.nodes,2,3)
+        self.is_network_split = False
         self.sync_all()
 
     def run_test (self):
@@ -92,7 +89,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
         time.sleep(2) #give blocks a chance to fully propagate
         sync_blocks(self.nodes[0:2])
         counts = [ x.getblockcount() for x in self.nodes ]
-        assert_equal(counts, [351,351,350,350])  
+        assert_equal(counts, [351,351,350,350])
 
         for i in range(0,20):
           self.nodes[0].sendtoaddress(addr, 1.0)
@@ -100,7 +97,7 @@ class ExcessiveBlockTest (BitcoinTestFramework):
         time.sleep(2) #give blocks a chance to fully propagate
         sync_blocks(self.nodes[0:3])
         counts = [ x.getblockcount() for x in self.nodes ]
-        assert_equal(counts, [352,352,352,351])  
+        assert_equal(counts, [352,352,352,351])
 
         for i in range(0,20):
           self.nodes[0].sendtoaddress(addr, 1.0)
@@ -130,28 +127,6 @@ class ExcessiveBlockTest (BitcoinTestFramework):
         sync_blocks(self.nodes[0:2])
         counts = [ x.getblockcount() for x in self.nodes ]
         assert_equal(counts, [509,509,508,508])  
-      
-
-        print "Random test"
-        random.seed(1)
-        for i in range(0,2):
-          print "round ", i,
-          for n in self.nodes:
-            size = random.randint(1,1000)*1000
-            n.setminingmaxblock(size)
-            n.setexcessiveblock(size, random.randint(0,10))
-          addrs = [x.getnewaddress() for x in self.nodes]
-          ntxs=0
-          for i in range(0,random.randint(1,1000)):
-            try:
-              self.nodes[random.randint(0,3)].sendtoaddress(addrs[random.randint(0,3)], .1)
-              ntxs += 1
-            except JSONRPCException: # could be spent all the txouts
-              pass
-          print ntxs, " transactions"
-          time.sleep(1)
-          self.nodes[random.randint(0,3)].generate(1)
-          time.sleep(1)
 
 
 if __name__ == '__main__':
