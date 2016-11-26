@@ -27,7 +27,7 @@ class WalletProtectCoinbaseTest (BitcoinTestFramework):
         print('waiting for async operation {}'.format(myopid))
         opids = []
         opids.append(myopid)
-        timeout = 120
+        timeout = 180
         status = None
         errormsg = None
         for x in xrange(1, timeout):
@@ -99,7 +99,7 @@ class WalletProtectCoinbaseTest (BitcoinTestFramework):
 
         # This send will succeed.  We send two coinbase utxos totalling 20.0 less a fee of 0.00010000, with no change.
         recipients = []
-        recipients.append({"address":myzaddr, "amount": Decimal('20.0') - Decimal('0.0001')})
+        recipients.append({"address":myzaddr, "amount": Decimal('50.0') - Decimal('0.0001')})
         myopid = self.nodes[0].z_sendmany(mytaddr, recipients)
         self.wait_and_assert_operationid_status(myopid)
         self.sync_all()
@@ -108,9 +108,9 @@ class WalletProtectCoinbaseTest (BitcoinTestFramework):
 
         # check balances (the z_sendmany consumes 3 coinbase utxos)
         resp = self.nodes[0].z_gettotalbalance()
-        assert_equal(Decimal(resp["transparent"]), Decimal('20.0'))
-        assert_equal(Decimal(resp["private"]), Decimal('19.9999'))
-        assert_equal(Decimal(resp["total"]), Decimal('39.9999'))
+        assert_equal(Decimal(resp["transparent"]), Decimal('150.0'))
+        assert_equal(Decimal(resp["private"]), Decimal('49.9999'))
+        assert_equal(Decimal(resp["total"]), Decimal('199.9999'))
 
         # convert note to transparent funds
         recipients = []
@@ -123,9 +123,9 @@ class WalletProtectCoinbaseTest (BitcoinTestFramework):
 
         # check balances
         resp = self.nodes[0].z_gettotalbalance()
-        assert_equal(Decimal(resp["transparent"]), Decimal('30.0'))
-        assert_equal(Decimal(resp["private"]), Decimal('9.9998'))
-        assert_equal(Decimal(resp["total"]), Decimal('39.9998'))
+        assert_equal(Decimal(resp["transparent"]), Decimal('160.0'))
+        assert_equal(Decimal(resp["private"]), Decimal('39.9998'))
+        assert_equal(Decimal(resp["total"]), Decimal('199.9998'))
 
         # z_sendmany will return an error if there is transparent change output considered dust.
         # UTXO selection in z_sendmany sorts in ascending order, so smallest utxos are consumed first.
@@ -150,11 +150,11 @@ class WalletProtectCoinbaseTest (BitcoinTestFramework):
         myopid = self.nodes[0].z_sendmany(mytaddr, recipients)
         self.wait_and_assert_operationid_status(myopid, "failed", "Insufficient transparent funds, have 10.00, need 10000.0001")
         myopid = self.nodes[0].z_sendmany(myzaddr, recipients)
-        self.wait_and_assert_operationid_status(myopid, "failed", "Insufficient protected funds, have 9.9998, need 10000.0001")
+        self.wait_and_assert_operationid_status(myopid, "failed", "Insufficient protected funds, have 39.9998, need 10000.0001")
 
         # Send will fail because of insufficient funds unless sender uses coinbase utxos
         try:
-            self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 21)
+            self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11)
         except JSONRPCException,e:
             errorString = e.error['message']
         assert_equal("Insufficient funds, coinbase funds can only be spent after they have been sent to a zaddr" in errorString, True)
